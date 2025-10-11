@@ -35,6 +35,12 @@ docker compose up -d
 ```bash
 # PostgreSQL (matches docker-compose.yml)
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/giaodien_db?schema=public"
+
+# AWS S3 Configuration (for image uploads)
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_REGION=us-east-1
+AWS_S3_BUCKET_NAME=your_bucket_name_here
 ```
 
 4. Prisma: generate client and sync schema
@@ -102,11 +108,52 @@ public/             # Static assets (SVGs, images)
 docker-compose.yml  # Local PostgreSQL service
 ```
 
+### AWS S3 Setup (for Image Uploads)
+
+This application uses AWS S3 to store uploaded app icons. To set it up:
+
+1. **Create an S3 Bucket**:
+
+   - Go to AWS Console → S3
+   - Create a new bucket (e.g., `giaodien-admin-uploads`)
+   - Choose your preferred region
+
+2. **Configure Bucket Permissions**:
+
+   - Block public access can be enabled (we'll use IAM credentials)
+   - Or make it public if you want direct access to images
+
+3. **Create IAM User**:
+
+   - Go to AWS Console → IAM → Users
+   - Create a new user for programmatic access
+   - Attach policy with S3 permissions (e.g., `AmazonS3FullAccess` or custom policy)
+
+4. **Custom IAM Policy** (recommended for production):
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+         "Resource": "arn:aws:s3:::your-bucket-name/*"
+       }
+     ]
+   }
+   ```
+
+5. **Add credentials to `.env`**:
+   - Copy the Access Key ID and Secret Access Key
+   - Add them to your `.env` file (see step 3 above)
+
 ### Notes
 
 - Prisma Client is generated to `src/generated/prisma` (see `prisma/schema.prisma`). Files like `src/lib/prisma.ts` import from this path. If you see module-not-found errors, run `pnpm prisma generate`.
 - The app uses the App Router and enables server actions (`next.config.ts`).
-- Images are allowed from `images.unsplash.com` per `next.config.ts`.
+- Image uploads are handled via `/api/upload` endpoint which stores files in AWS S3.
+- Maximum upload size is 5MB per image (configurable in `src/lib/s3.ts`).
 
 ### Troubleshooting
 

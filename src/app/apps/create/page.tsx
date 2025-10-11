@@ -1,4 +1,7 @@
-import { createApp } from "@/lib/actions";
+"use client";
+
+import { useState } from "react";
+import { createApp, createAppWithScreens } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +19,63 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ImageUpload } from "@/components/image-upload";
+import {
+  MultiImageUpload,
+  type ScreenUpload,
+} from "@/components/multi-image-upload";
+import { Separator } from "@/components/ui/separator";
 
 export default function CreateAppPage() {
+  const [iconUrl, setIconUrl] = useState("");
+  const [screens, setScreens] = useState<ScreenUpload[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      // Add the icon URL from state
+      if (iconUrl) {
+        formData.set("icon", iconUrl);
+      }
+
+      // Validate screens are uploaded
+      const unuploadedScreens = screens.filter((s) => !s.imageUrl);
+      if (unuploadedScreens.length > 0) {
+        alert(
+          `Please upload all screens to S3 first. ${unuploadedScreens.length} screen(s) pending.`
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare screen data
+      const screenData = screens.map((s) => ({
+        title: s.title,
+        description: s.description || undefined,
+        imageUrl: s.imageUrl,
+      }));
+
+      // Create app with screens
+      if (screens.length > 0) {
+        const result = await createAppWithScreens(formData, screenData);
+        if (result.success) {
+          window.location.href = "/apps";
+        }
+      } else {
+        // Create app without screens (uses redirect)
+        await createApp(formData);
+      }
+    } catch (error) {
+      console.error("Failed to create app:", error);
+      alert(error instanceof Error ? error.message : "Failed to create app");
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto w-full py-6">
       <Card>
@@ -28,7 +86,15 @@ export default function CreateAppPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createApp} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label>App Icon</Label>
+              <ImageUpload
+                onUploadComplete={setIconUrl}
+                label="Upload App Icon"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="name">App Name *</Label>
               <Input
@@ -96,20 +162,58 @@ export default function CreateAppPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="iconUrl">Icon URL</Label>
-              <Input
-                id="iconUrl"
-                name="iconUrl"
-                type="url"
-                placeholder="https://example.com/icon.png"
-              />
+              <Label htmlFor="brandColor">Brand Color</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="brandColor"
+                  name="brandColor"
+                  type="color"
+                  className="w-20 h-10 p-1"
+                />
+                <Input
+                  type="text"
+                  name="brandColorText"
+                  placeholder="#000000"
+                  className="flex-1"
+                  onChange={(e) => {
+                    const colorInput = document.getElementById(
+                      "brandColor"
+                    ) as HTMLInputElement;
+                    if (
+                      colorInput &&
+                      /^#[0-9A-Fa-f]{6}$/.test(e.target.value)
+                    ) {
+                      colorInput.value = e.target.value;
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <Separator className="my-6" />
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold">Screen Images</h3>
+                <p className="text-sm text-muted-foreground">
+                  Upload screenshots of your app (optional)
+                </p>
+              </div>
+              <MultiImageUpload onScreensChange={setScreens} maxFiles={20} />
             </div>
 
             <div className="flex gap-3 justify-end">
-              <Button type="button" variant="outline" asChild>
+              <Button
+                type="button"
+                variant="outline"
+                asChild
+                disabled={isSubmitting}
+              >
                 <a href="/apps">Cancel</a>
               </Button>
-              <Button type="submit">Create App</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create App"}
+              </Button>
             </div>
           </form>
         </CardContent>

@@ -25,20 +25,29 @@ async function AppsList() {
         apps.map((app) => (
           <Card key={app.id}>
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="flex items-center gap-2">
-                    {app.name}
+              <div className="flex items-start justify-between gap-3">
+                {app.icon && (
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    <img
+                      src={app.icon}
+                      alt={app.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="flex items-center gap-2 flex-wrap">
+                    <span className="truncate">{app.name}</span>
                     <Badge variant="secondary">{app.platform}</Badge>
                   </CardTitle>
-                  <CardDescription className="mt-1.5">
+                  <CardDescription className="mt-1.5 truncate">
                     {app.slug}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                 {app.description || "No description provided"}
               </p>
               <div className="flex items-center justify-between text-sm">

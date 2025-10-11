@@ -44,6 +44,20 @@ const createAppSchema = z.object({
     message: "Platform must be IOS, ANDROID, or WEB",
   }),
 
+  icon: z
+    .string()
+    .url("Icon must be a valid URL")
+    .max(500, "Icon URL too long")
+    .optional()
+    .nullable(),
+
+  category: z
+    .string()
+    .max(100, "Category must be less than 100 characters")
+    .trim()
+    .optional()
+    .nullable(),
+
   brandColor: z
     .string()
     .regex(
@@ -84,6 +98,8 @@ export async function getApps() {
 
 // Example: Create new app with XSS protection
 export async function createApp(formData: FormData) {
+  let appId: string;
+
   try {
     // 🛡️ Validate and sanitize input
     const validated = createAppSchema.parse({
@@ -91,15 +107,18 @@ export async function createApp(formData: FormData) {
       slug: formData.get("slug"),
       description: formData.get("description"),
       platform: formData.get("platform"),
+      icon: formData.get("icon") || null,
+      category: formData.get("category") || null,
       brandColor: formData.get("brandColor") || null,
       websiteUrl: formData.get("websiteUrl") || null,
     });
 
     // Safe to use validated data
-    await prisma.app.create({
+    const app = await prisma.app.create({
       data: validated,
     });
 
+    appId = app.id;
     revalidatePath("/apps");
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -115,6 +134,59 @@ export async function createApp(formData: FormData) {
 
   // Redirect outside try-catch to avoid catching redirect error
   redirect("/apps");
+}
+
+// Create app with screens (no redirect, returns app ID)
+export async function createAppWithScreens(
+  formData: FormData,
+  screens: Array<{
+    title: string;
+    description?: string;
+    imageUrl: string;
+  }>
+) {
+  try {
+    // Validate and sanitize input
+    const validated = createAppSchema.parse({
+      name: formData.get("name"),
+      slug: formData.get("slug"),
+      description: formData.get("description"),
+      platform: formData.get("platform"),
+      icon: formData.get("icon") || null,
+      category: formData.get("category") || null,
+      brandColor: formData.get("brandColor") || null,
+      websiteUrl: formData.get("websiteUrl") || null,
+    });
+
+    // Validate screens
+    const validatedScreens = screens.map((screen) =>
+      createScreenSchema.parse(screen)
+    );
+
+    // Create app and screens in a transaction
+    const app = await prisma.app.create({
+      data: {
+        ...validated,
+        screens: {
+          create: validatedScreens,
+        },
+      },
+    });
+
+    revalidatePath("/apps");
+    revalidatePath(`/apps/${app.id}`);
+
+    return { success: true, appId: app.id };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      throw new Error(
+        error.issues.map((e: z.ZodIssue) => e.message).join(", ")
+      );
+    }
+    console.error("Failed to create app with screens:", error);
+    throw new Error("Failed to create app with screens");
+  }
 }
 
 // Example: Increment screen view count with validation
@@ -187,6 +259,8 @@ export async function updateApp(appId: string, formData: FormData) {
       slug: formData.get("slug"),
       description: formData.get("description"),
       platform: formData.get("platform"),
+      icon: formData.get("icon") || null,
+      category: formData.get("category") || null,
       brandColor: formData.get("brandColor") || null,
       websiteUrl: formData.get("websiteUrl") || null,
     });
@@ -236,4 +310,131 @@ export async function deleteApp(formData: FormData) {
   }
 
   redirect("/apps");
+}
+
+// Screen validation schema
+const createScreenSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(100, "Title must be less than 100 characters")
+    .trim(),
+
+  description: z
+    .string()
+    .max(500, "Description must be less than 500 characters")
+    .trim()
+    .optional()
+    .nullable()
+    .transform((val) => {
+      if (!val) return null;
+      return val.replace(/<[^>]*>/g, "");
+    }),
+
+  imageUrl: z
+    .string()
+    .url("Image URL must be valid")
+    .max(500, "Image URL too long"),
+
+  screenType: z
+    .string()
+    .max(50, "Screen type must be less than 50 characters")
+    .trim()
+    .optional()
+    .nullable(),
+
+  tags: z.array(z.string()).optional().default([]),
+});
+
+// Create multiple screens for an app
+export async function createScreens(
+  appId: string,
+  screens: Array<{
+    title: string;
+    description?: string;
+    imageUrl: string;
+    screenType?: string;
+    tags?: string[];
+  }>
+) {
+  try {
+    // Validate app ID
+    const idSchema = z.string().cuid("Invalid app ID format");
+    const validatedAppId = idSchema.parse(appId);
+
+    // Validate each screen
+    const validatedScreens = screens.map((screen) =>
+      createScreenSchema.parse(screen)
+    );
+
+    // Create all screens in a transaction
+    await prisma.$transaction(
+      validatedScreens.map((screen) =>
+        prisma.screen.create({
+          data: {
+            ...screen,
+            appId: validatedAppId,
+          },
+        })
+      )
+    );
+
+    revalidatePath("/apps");
+    revalidatePath(`/apps/${validatedAppId}`);
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      throw new Error(
+        error.issues.map((e: z.ZodIssue) => e.message).join(", ")
+      );
+    }
+    console.error("Failed to create screens:", error);
+    throw new Error("Failed to create screens");
+  }
+}
+
+// Get screens for an app
+export async function getScreensByAppId(appId: string) {
+  try {
+    const idSchema = z.string().cuid("Invalid app ID format");
+    const validatedId = idSchema.parse(appId);
+
+    const screens = await prisma.screen.findMany({
+      where: { appId: validatedId, isPublished: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return { success: true, data: screens };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Invalid ID:", error.issues);
+      return { success: false, error: "Invalid app ID" };
+    }
+    console.error("Failed to fetch screens:", error);
+    return { success: false, error: "Failed to fetch screens" };
+  }
+}
+
+// Delete a screen
+export async function deleteScreen(screenId: string) {
+  try {
+    const idSchema = z.string().cuid("Invalid screen ID format");
+    const validatedId = idSchema.parse(screenId);
+
+    await prisma.screen.delete({
+      where: { id: validatedId },
+    });
+
+    revalidatePath("/apps");
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Invalid ID:", error.issues);
+      return { success: false, error: "Invalid screen ID" };
+    }
+    console.error("Failed to delete screen:", error);
+    return { success: false, error: "Failed to delete screen" };
+  }
 }
