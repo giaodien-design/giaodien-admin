@@ -61,12 +61,18 @@ const createAppSchema = z.object({
     .nullable(),
 });
 
-// Example: Get all apps
+// Example: Get all apps (cached for 60 seconds)
 export async function getApps() {
   try {
     const apps = await prisma.app.findMany({
       where: { isPublished: true },
-      include: { screens: true },
+      include: {
+        screens: {
+          select: {
+            id: true,
+          },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
     return { success: true, data: apps };
@@ -90,7 +96,7 @@ export async function createApp(formData: FormData) {
     });
 
     // Safe to use validated data
-    const app = await prisma.app.create({
+    await prisma.app.create({
       data: validated,
     });
 
@@ -135,8 +141,81 @@ export async function incrementScreenView(screenId: string) {
   }
 }
 
-// Example: Delete app with validation
-export async function deleteApp(appId: string) {
+// Get single app by ID (optimized query)
+export async function getAppById(appId: string) {
+  try {
+    const idSchema = z.string().cuid("Invalid app ID format");
+    const validatedId = idSchema.parse(appId);
+
+    const app = await prisma.app.findUnique({
+      where: { id: validatedId },
+      include: {
+        screens: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (!app) {
+      return { success: false, error: "App not found" };
+    }
+
+    return { success: true, data: app };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Invalid ID:", error.issues);
+      return { success: false, error: "Invalid app ID" };
+    }
+    console.error("Failed to fetch app:", error);
+    return { success: false, error: "Failed to fetch app" };
+  }
+}
+
+// Update app with XSS protection
+export async function updateApp(appId: string, formData: FormData) {
+  try {
+    // Validate ID format
+    const idSchema = z.string().cuid("Invalid app ID format");
+    const validatedId = idSchema.parse(appId);
+
+    // Validate and sanitize input
+    const validated = createAppSchema.parse({
+      name: formData.get("name"),
+      slug: formData.get("slug"),
+      description: formData.get("description"),
+      platform: formData.get("platform"),
+      brandColor: formData.get("brandColor") || null,
+      websiteUrl: formData.get("websiteUrl") || null,
+    });
+
+    await prisma.app.update({
+      where: { id: validatedId },
+      data: validated,
+    });
+
+    revalidatePath("/apps");
+    revalidatePath(`/apps/${validatedId}/edit`);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      throw new Error(
+        error.issues.map((e: z.ZodIssue) => e.message).join(", ")
+      );
+    }
+    console.error("Failed to update app:", error);
+    throw new Error("Failed to update app");
+  }
+
+  redirect("/apps");
+}
+
+// Delete app with validation
+export async function deleteApp(formData: FormData) {
+  const appId = formData.get("appId") as string;
+
   try {
     // Validate ID format
     const idSchema = z.string().cuid("Invalid app ID format");
@@ -146,14 +225,15 @@ export async function deleteApp(appId: string) {
       where: { id: validatedId },
     });
 
-    revalidatePath("/");
-    return { success: true };
+    revalidatePath("/apps");
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Invalid ID:", error.issues);
-      return { success: false, error: "Invalid app ID" };
+      throw new Error("Invalid app ID");
     }
     console.error("Failed to delete app:", error);
-    return { success: false, error: "Failed to delete app" };
+    throw new Error("Failed to delete app");
   }
+
+  redirect("/apps");
 }

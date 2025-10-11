@@ -36,6 +36,7 @@ model App {
   @@index([category])
   @@index([platform])
   @@index([slug])
+  @@index([isPublished, createdAt(sort: Desc)])
 }
 
 model Screen {
