@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model App {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  icon        String?  // URL icon/logo của app
+  category    String?  // Social, Finance, Productivity, E-commerce, etc.
+  platform    Platform @default(IOS)
+  brandColor  String?  // Màu chủ đạo của app (hex code)
+  websiteUrl  String?
+  slug        String   @unique // URL-friendly name: instagram, spotify, etc.
+  
+  // Relations
+  screens     Screen[]
+  
+  // Metadata
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([platform])
+  @@index([slug])
+}
+
+model Screen {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String   // URL ảnh screenshot
+  
+  // Relations
+  appId       String
+  app         App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  
+  // Categorization
+  screenType  String?  // Login, Home, Profile, Settings, Onboarding, Checkout, etc.
+  tags        String[] // modal, form, list, card, navigation, animation, etc.
+  
+  // Engagement
+  viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  
+  // Metadata
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([appId])
+  @@index([screenType])
+  @@index([viewCount])
+  @@index([likeCount])
+}
+
+enum Platform {
+  IOS
+  ANDROID
+  WEB
+}
