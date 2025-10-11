@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 // Zod schemas for XSS protection
@@ -89,11 +90,11 @@ export async function createApp(formData: FormData) {
     });
 
     // Safe to use validated data
-    await prisma.app.create({
+    const app = await prisma.app.create({
       data: validated,
     });
 
-    revalidatePath("/test");
+    revalidatePath("/apps");
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Return validation errors to user
@@ -105,6 +106,9 @@ export async function createApp(formData: FormData) {
     console.error("Failed to create app:", error);
     throw new Error("Failed to create app");
   }
+
+  // Redirect outside try-catch to avoid catching redirect error
+  redirect("/apps");
 }
 
 // Example: Increment screen view count with validation

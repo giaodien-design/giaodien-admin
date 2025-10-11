@@ -1,0 +1,91 @@
+import { getApps } from "@/lib/actions";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { IconPlus } from "@tabler/icons-react";
+
+export default async function AppsPage() {
+  const { data: apps } = await getApps();
+
+  return (
+    <>
+      <div className="flex items-center justify-between py-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Apps</h1>
+          <p className="text-muted-foreground">
+            Manage your applications and their content
+          </p>
+        </div>
+        <Button asChild>
+          <a href="/apps/create">
+            <IconPlus className="mr-2 h-4 w-4" />
+            Create New App
+          </a>
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {apps && apps.length > 0 ? (
+          apps.map((app) => (
+            <Card key={app.id}>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="flex items-center gap-2">
+                      {app.name}
+                      <Badge variant="secondary">{app.platform}</Badge>
+                    </CardTitle>
+                    <CardDescription className="mt-1.5">
+                      {app.slug}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {app.description || "No description provided"}
+                </p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {app.screens.length} screen
+                    {app.screens.length !== 1 ? "s" : ""}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href={`/apps/${app.id}`}>View</a>
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href={`/apps/${app.id}/edit`}>Edit</a>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full">
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <p className="text-muted-foreground mb-4">
+                  No apps found. Create your first app to get started.
+                </p>
+                <Button asChild>
+                  <a href="/apps/create">
+                    <IconPlus className="mr-2 h-4 w-4" />
+                    Create New App
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
