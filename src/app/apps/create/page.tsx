@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createApp, createAppWithScreens } from "@/lib/actions";
+import { useState, useEffect } from "react";
+import { createApp, createAppWithScreens, getAllFlows, getAllCategories } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,26 @@ export default function CreateAppPage() {
   const [iconUrl, setIconUrl] = useState("");
   const [screens, setScreens] = useState<ScreenUpload[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [flows, setFlows] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedFlowId, setSelectedFlowId] = useState<string>("");
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  useEffect(() => {
+    async function loadData() {
+      const [flowsResult, categoriesResult] = await Promise.all([
+        getAllFlows(),
+        getAllCategories(),
+      ]);
+      if (flowsResult.success && flowsResult.data) {
+        setFlows(flowsResult.data.map((f) => ({ id: f.id, name: f.name })));
+      }
+      if (categoriesResult.success && categoriesResult.data) {
+        setCategories(categoriesResult.data.map((c) => ({ id: c.id, name: c.name })));
+      }
+    }
+    loadData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,6 +60,10 @@ export default function CreateAppPage() {
       // Add the icon URL from state
       if (iconUrl) {
         formData.set("icon", iconUrl);
+      }
+      // Add the category ID from state
+      if (selectedCategoryId) {
+        formData.set("categoryId", selectedCategoryId);
       }
 
       // Validate screens are uploaded
@@ -52,22 +76,24 @@ export default function CreateAppPage() {
         return;
       }
 
-      // Prepare screen data
+      // Prepare screen data - use selected flow for all screens if provided
       const screenData = screens.map((s) => ({
         title: s.title,
         description: s.description || undefined,
         imageUrl: s.imageUrl,
+        flowId: selectedFlowId || undefined, // Use selected flow for all screens, or undefined if none selected
       }));
 
       // Create app with screens
       if (screens.length > 0) {
         const result = await createAppWithScreens(formData, screenData);
         if (result.success) {
-          window.location.href = "/apps";
+          window.location.href = `/apps/${result.appId}`;
         }
       } else {
-        // Create app without screens (uses redirect)
+        // Create app without screens
         await createApp(formData);
+        window.location.href = "/apps";
       }
     } catch (error) {
       console.error("Failed to create app:", error);
@@ -143,12 +169,23 @@ export default function CreateAppPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                name="category"
-                placeholder="e.g., Social Media, Productivity"
-              />
+              <Label htmlFor="category-select">Category</Label>
+              <Select
+                value={selectedCategoryId}
+                onValueChange={setSelectedCategoryId}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="category-select">
+                  <SelectValue placeholder="Select a category (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -163,31 +200,44 @@ export default function CreateAppPage() {
 
             <div className="space-y-2">
               <Label htmlFor="brandColor">Brand Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="brandColor"
-                  name="brandColor"
-                  type="color"
-                  className="w-20 h-10 p-1"
-                />
-                <Input
-                  type="text"
-                  name="brandColorText"
-                  placeholder="#000000"
-                  className="flex-1"
-                  onChange={(e) => {
-                    const colorInput = document.getElementById(
-                      "brandColor"
-                    ) as HTMLInputElement;
-                    if (
-                      colorInput &&
-                      /^#[0-9A-Fa-f]{6}$/.test(e.target.value)
-                    ) {
-                      colorInput.value = e.target.value;
-                    }
-                  }}
-                />
-              </div>
+              <Input
+                id="brandColor"
+                name="brandColor"
+                type="text"
+                placeholder="#FF5733"
+                pattern="^#[0-9A-Fa-f]{6}$"
+              />
+              <p className="text-sm text-muted-foreground">
+                Hex color code (e.g., #FF5733)
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="thumbnailUrl">Thumbnail URL</Label>
+              <Input
+                id="thumbnailUrl"
+                name="thumbnailUrl"
+                type="url"
+                placeholder="https://example.com/thumbnail.png"
+              />
+              <p className="text-sm text-muted-foreground">
+                Cover image for the App Card
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sortOrder">Sort Order</Label>
+              <Input
+                id="sortOrder"
+                name="sortOrder"
+                type="number"
+                placeholder="0"
+                defaultValue="0"
+                min="0"
+              />
+              <p className="text-sm text-muted-foreground">
+                Controls the app's position on the homepage (lower numbers appear first)
+              </p>
             </div>
 
             <Separator className="my-6" />
@@ -196,10 +246,41 @@ export default function CreateAppPage() {
               <div>
                 <h3 className="text-lg font-semibold">Screen Images</h3>
                 <p className="text-sm text-muted-foreground">
-                  Upload screenshots of your app (optional)
+                  Upload screenshots and assign them to a flow (optional)
                 </p>
               </div>
-              <MultiImageUpload onScreensChange={setScreens} maxFiles={20} />
+
+              {/* Flow Selection */}
+              {flows.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor="flow-select">Select Flow (Optional)</Label>
+                  <Select
+                    value={selectedFlowId}
+                    onValueChange={setSelectedFlowId}
+                    disabled={isSubmitting}
+                  >
+                  <SelectTrigger id="flow-select">
+                    <SelectValue placeholder="Select a flow to assign all screens to (optional)" />
+                  </SelectTrigger>
+                    <SelectContent>
+                      {flows.map((flow) => (
+                        <SelectItem key={flow.id} value={flow.id}>
+                          {flow.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    All screens uploaded below will be assigned to the selected flow
+                  </p>
+                </div>
+              )}
+
+              <MultiImageUpload
+                onScreensChange={setScreens}
+                maxFiles={20}
+                flows={[]} // Don't show individual flow selection since we're using the dropdown above
+              />
             </div>
 
             <div className="flex gap-3 justify-end">

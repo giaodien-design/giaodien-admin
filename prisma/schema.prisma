@@ -15,28 +15,60 @@ datasource db {
 }
 
 model App {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  icon          String?   // URL icon/logo của app
+  thumbnailUrl  String?   // Thumbnail image URL
+  legacyCategory String?  // Legacy category field (deprecated, kept for data migration)
+  categoryId    String?   // New category relation
+  category      Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  platform      Platform  @default(IOS)
+  brandColor    String?   // Màu chủ đạo của app (hex code)
+  websiteUrl    String?
+  slug          String    @unique // URL-friendly name: instagram, spotify, etc.
+  sortOrder     Int       @default(0)
+  
+  // Relations
+  screens       Screen[]
+  
+  // Metadata
+  isPublished   Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([legacyCategory])
+  @@index([categoryId])
+  @@index([platform])
+  @@index([slug])
+  @@index([isPublished, createdAt(sort: Desc)])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  apps        App[]
+  
+  @@index([slug])
+}
+
+model Flow {
   id          String   @id @default(cuid())
   name        String
   description String?
-  icon        String?  // URL icon/logo của app
-  category    String?  // Social, Finance, Productivity, E-commerce, etc.
-  platform    Platform @default(IOS)
-  brandColor  String?  // Màu chủ đạo của app (hex code)
-  websiteUrl  String?
-  slug        String   @unique // URL-friendly name: instagram, spotify, etc.
+  sortOrder   Int      @default(0)
   
   // Relations
   screens     Screen[]
   
   // Metadata
-  isPublished Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@index([category])
-  @@index([platform])
-  @@index([slug])
-  @@index([isPublished, createdAt(sort: Desc)])
 }
 
 model Screen {
@@ -48,6 +80,8 @@ model Screen {
   // Relations
   appId       String
   app         App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  flowId      String?
+  flow        Flow?    @relation(fields: [flowId], references: [id], onDelete: SetNull)
   
   // Categorization
   screenType  String?  // Login, Home, Profile, Settings, Onboarding, Checkout, etc.
@@ -63,6 +97,7 @@ model Screen {
   updatedAt   DateTime @updatedAt
 
   @@index([appId])
+  @@index([flowId])
   @@index([screenType])
   @@index([viewCount])
   @@index([likeCount])

@@ -6,6 +6,8 @@ import {
   IconDashboard,
   IconInnerShadowTop,
   IconSettings,
+  IconGitBranch,
+  IconCategory,
 } from "@tabler/icons-react";
 
 import { NavApps } from "@/components/nav-apps";
@@ -34,21 +36,23 @@ const data = {
       url: "#",
       icon: IconDashboard,
     },
-  ],
-  navClouds: [
     {
-      title: "Apps",
-      icon: IconApps,
-      isActive: true,
+      title: "All Apps",
       url: "/apps",
-      items: [
-        {
-          title: "All Apps",
-          url: "/apps",
-        },
-      ],
+      icon: IconApps,
+    },
+    {
+      title: "All Flows",
+      url: "/flows",
+      icon: IconGitBranch,
+    },
+    {
+      title: "All Categories",
+      url: "/categories",
+      icon: IconCategory,
     },
   ],
+  navClouds: [],
   navSecondary: [
     {
       title: "Settings",
@@ -77,9 +81,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavApps items={data.navClouds} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* Desktop/Tablet menu */}
+        <div className="hidden md:block">
+          <NavMain items={data.navMain} />
+          {data.navClouds.length > 0 && <NavApps items={data.navClouds} />}
+          <NavSecondary items={data.navSecondary} className="mt-auto" />
+        </div>
+        {/* Mobile drawer per Figma: centered actions */}
+        <div className="md:hidden flex flex-col items-center justify-center gap-4 py-10">
+          <a
+            href="#"
+            className="h-[43px] rounded-[12px] px-5 inline-flex items-center justify-center border bg-[color:var(--color-ink)]/3 hover:bg-[color:var(--color-ink)]/6"
+          >
+            Đăng nhập
+          </a>
+          <a
+            href="#"
+            className="h-[43px] rounded-[12px] px-5 inline-flex items-center justify-center border bg-[color:var(--color-ink)]/3 hover:bg-[color:var(--color-ink)]/6"
+          >
+            Chuyển sang tiếng Anh
+          </a>
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

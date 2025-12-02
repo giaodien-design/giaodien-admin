@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface ScreenCardProps {
   screen: {
@@ -10,7 +9,6 @@ interface ScreenCardProps {
     title: string;
     description: string | null;
     imageUrl: string;
-    screenType: string | null;
     viewCount: number;
     likeCount: number;
   };
@@ -41,11 +39,6 @@ export function ScreenCard({ screen }: ScreenCardProps) {
           <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
             {screen.description}
           </p>
-        )}
-        {screen.screenType && (
-          <Badge variant="outline" className="mt-2 text-xs">
-            {screen.screenType}
-          </Badge>
         )}
         <div className="flex gap-2 text-xs text-muted-foreground mt-2">
           <span>👁 {screen.viewCount}</span>

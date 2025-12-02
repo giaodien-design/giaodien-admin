@@ -23,6 +23,23 @@ export async function uploadToS3(
   key: string,
   contentType: string
 ): Promise<string> {
+  // Validate bucket name is configured
+  if (!BUCKET_NAME || BUCKET_NAME.trim() === "") {
+    throw new Error(
+      "AWS_S3_BUCKET_NAME environment variable is not set. Please configure it in your .env file."
+    );
+  }
+
+  // Validate AWS credentials are configured
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID || "";
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || "";
+  
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error(
+      "AWS credentials are not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file."
+    );
+  }
+
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
     Key: key,
