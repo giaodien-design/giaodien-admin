@@ -6,6 +6,8 @@ import {
   IconDashboard,
   IconInnerShadowTop,
   IconSettings,
+  IconGitBranch,
+  IconCategory,
 } from "@tabler/icons-react";
 
 import { NavApps } from "@/components/nav-apps";
@@ -34,21 +36,23 @@ const data = {
       url: "#",
       icon: IconDashboard,
     },
-  ],
-  navClouds: [
     {
-      title: "Apps",
-      icon: IconApps,
-      isActive: true,
+      title: "All Apps",
       url: "/apps",
-      items: [
-        {
-          title: "All Apps",
-          url: "/apps",
-        },
-      ],
+      icon: IconApps,
+    },
+    {
+      title: "All Flows",
+      url: "/flows",
+      icon: IconGitBranch,
+    },
+    {
+      title: "All Categories",
+      url: "/categories",
+      icon: IconCategory,
     },
   ],
+  navClouds: [],
   navSecondary: [
     {
       title: "Settings",
@@ -80,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* Desktop/Tablet menu */}
         <div className="hidden md:block">
           <NavMain items={data.navMain} />
-          <NavApps items={data.navClouds} />
+          {data.navClouds.length > 0 && <NavApps items={data.navClouds} />}
           <NavSecondary items={data.navSecondary} className="mt-auto" />
         </div>
         {/* Mobile drawer per Figma: centered actions */}

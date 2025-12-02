@@ -80,7 +80,13 @@ async function AppDetailContent({ appId }: { appId: string }) {
             {app.category && (
               <div>
                 <h3 className="text-sm font-semibold mb-1">Category</h3>
-                <p className="text-muted-foreground">{app.category}</p>
+                <p className="text-muted-foreground">{app.category.name}</p>
+              </div>
+            )}
+            {!app.category && app.legacyCategory && (
+              <div>
+                <h3 className="text-sm font-semibold mb-1">Category</h3>
+                <p className="text-muted-foreground">{app.legacyCategory}</p>
               </div>
             )}
             {app.brandColor && (
@@ -126,7 +132,7 @@ async function AppDetailContent({ appId }: { appId: string }) {
         </CardContent>
       </Card>
 
-      {/* Screens Gallery */}
+      {/* Screens Gallery Grouped by Flow */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Screens</h2>
@@ -136,11 +142,51 @@ async function AppDetailContent({ appId }: { appId: string }) {
         </div>
 
         {screens && screens.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {screens.map((screen) => (
-              <ScreenCard key={screen.id} screen={screen} />
-            ))}
-          </div>
+          (() => {
+            // Group screens by flow
+            const screensByFlow = screens.reduce(
+              (acc, screen) => {
+                const flowKey = screen.flowId || "no-flow";
+                if (!acc[flowKey]) {
+                  acc[flowKey] = {
+                    flow: screen.flow,
+                    screens: [],
+                  };
+                }
+                acc[flowKey].screens.push(screen);
+                return acc;
+              },
+              {} as Record<
+                string,
+                {
+                  flow: { id: string; name: string } | null;
+                  screens: typeof screens;
+                }
+              >
+            );
+
+            return (
+              <div className="space-y-6">
+                {Object.entries(screensByFlow).map(([flowKey, { flow, screens: flowScreens }]) => (
+                  <div key={flowKey} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold">
+                        {flow ? flow.name : "No Flow"}
+                      </h3>
+                      <Badge variant="secondary">
+                        {flowScreens.length} screen{flowScreens.length !== 1 ? "s" : ""}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {flowScreens.map((screen) => (
+                        <ScreenCard key={screen.id} screen={screen} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()
         ) : (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">

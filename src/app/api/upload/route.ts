@@ -39,8 +39,26 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Upload error:", error);
+    
+    // Provide more specific error messages
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Failed to upload image";
+    
+    // Check if it's a configuration error
+    if (errorMessage.includes("AWS_S3_BUCKET_NAME") || errorMessage.includes("AWS credentials")) {
+      return NextResponse.json(
+        {
+          error: errorMessage,
+          hint: "Please check your .env file and ensure AWS_S3_BUCKET_NAME, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY are set.",
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Failed to upload image" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

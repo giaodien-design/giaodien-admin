@@ -57,6 +57,12 @@ const createAppSchema = z.object({
     .trim()
     .optional()
     .nullable(),
+  
+  categoryId: z
+    .string()
+    .cuid("Invalid category ID format")
+    .optional()
+    .nullable(),
 
   brandColor: z
     .string()
@@ -73,6 +79,19 @@ const createAppSchema = z.object({
     .max(200, "URL too long")
     .optional()
     .nullable(),
+
+  thumbnailUrl: z
+    .string()
+    .url("Thumbnail must be a valid URL")
+    .max(500, "Thumbnail URL too long")
+    .optional()
+    .nullable(),
+
+  sortOrder: z
+    .number()
+    .int()
+    .default(0)
+    .optional(),
 });
 
 // Example: Get all apps (cached for 60 seconds)
@@ -87,7 +106,10 @@ export async function getApps() {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { sortOrder: "asc" },
+        { updatedAt: "desc" },
+      ],
     });
     return { success: true, data: apps };
   } catch (error) {
@@ -96,26 +118,75 @@ export async function getApps() {
   }
 }
 
+// Flow validation schema
+const createFlowSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters")
+    .trim()
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      "Name can only contain letters, numbers, spaces, hyphens and underscores"
+    ),
+
+  description: z
+    .string()
+    .max(500, "Description must be less than 500 characters")
+    .trim()
+    .optional()
+    .nullable()
+    .transform((val) => {
+      if (!val) return null;
+      return val.replace(/<[^>]*>/g, "");
+    }),
+
+  sortOrder: z
+    .number()
+    .int()
+    .default(0)
+    .optional(),
+});
+
 // Example: Create new app with XSS protection
 export async function createApp(formData: FormData) {
   let appId: string;
 
   try {
     // 🛡️ Validate and sanitize input
+    const sortOrderValue = formData.get("sortOrder");
+    const categoryIdValue = formData.get("categoryId");
     const validated = createAppSchema.parse({
       name: formData.get("name"),
       slug: formData.get("slug"),
       description: formData.get("description"),
       platform: formData.get("platform"),
       icon: formData.get("icon") || null,
-      category: formData.get("category") || null,
+      category: formData.get("category") || null, // Keep for legacy support
+      categoryId: categoryIdValue || null,
       brandColor: formData.get("brandColor") || null,
       websiteUrl: formData.get("websiteUrl") || null,
+      thumbnailUrl: formData.get("thumbnailUrl") || null,
+      sortOrder: sortOrderValue
+        ? parseInt(sortOrderValue as string) || 0
+        : 0,
     });
 
     // Safe to use validated data
     const app = await prisma.app.create({
-      data: validated,
+      data: {
+        name: validated.name,
+        slug: validated.slug,
+        description: validated.description,
+        platform: validated.platform,
+        icon: validated.icon,
+        legacyCategory: validated.category, // Store in legacy field
+        categoryId: validated.categoryId,
+        brandColor: validated.brandColor,
+        websiteUrl: validated.websiteUrl,
+        thumbnailUrl: validated.thumbnailUrl,
+        sortOrder: validated.sortOrder,
+      },
     });
 
     appId = app.id;
@@ -132,8 +203,8 @@ export async function createApp(formData: FormData) {
     throw new Error("Failed to create app");
   }
 
-  // Redirect outside try-catch to avoid catching redirect error
-  redirect("/apps");
+  // Redirect to app detail page
+  redirect(`/apps/${appId}`);
 }
 
 // Create app with screens (no redirect, returns app ID)
@@ -143,30 +214,52 @@ export async function createAppWithScreens(
     title: string;
     description?: string;
     imageUrl: string;
+    flowId?: string;
   }>
 ) {
   try {
     // Validate and sanitize input
+    const sortOrderValue = formData.get("sortOrder");
+    const categoryIdValue = formData.get("categoryId");
     const validated = createAppSchema.parse({
       name: formData.get("name"),
       slug: formData.get("slug"),
       description: formData.get("description"),
       platform: formData.get("platform"),
       icon: formData.get("icon") || null,
-      category: formData.get("category") || null,
+      category: formData.get("category") || null, // Keep for legacy support
+      categoryId: categoryIdValue || null,
       brandColor: formData.get("brandColor") || null,
       websiteUrl: formData.get("websiteUrl") || null,
+      thumbnailUrl: formData.get("thumbnailUrl") || null,
+      sortOrder: sortOrderValue
+        ? parseInt(sortOrderValue as string) || 0
+        : 0,
     });
 
     // Validate screens
-    const validatedScreens = screens.map((screen) =>
-      createScreenSchema.parse(screen)
-    );
+    const validatedScreens = screens.map((screen) => {
+      const baseScreen = createScreenSchema.parse(screen);
+      return {
+        ...baseScreen,
+        flowId: screen.flowId || null,
+      };
+    });
 
     // Create app and screens in a transaction
     const app = await prisma.app.create({
       data: {
-        ...validated,
+        name: validated.name,
+        slug: validated.slug,
+        description: validated.description,
+        platform: validated.platform,
+        icon: validated.icon,
+        legacyCategory: validated.category, // Store in legacy field
+        categoryId: validated.categoryId,
+        brandColor: validated.brandColor,
+        websiteUrl: validated.websiteUrl,
+        thumbnailUrl: validated.thumbnailUrl,
+        sortOrder: validated.sortOrder,
         screens: {
           create: validatedScreens,
         },
@@ -228,6 +321,13 @@ export async function getAppById(appId: string) {
             title: true,
           },
         },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
       },
     });
 
@@ -254,24 +354,44 @@ export async function updateApp(appId: string, formData: FormData) {
     const validatedId = idSchema.parse(appId);
 
     // Validate and sanitize input
+    const sortOrderValue = formData.get("sortOrder");
+    const categoryIdValue = formData.get("categoryId");
     const validated = createAppSchema.parse({
       name: formData.get("name"),
       slug: formData.get("slug"),
       description: formData.get("description"),
       platform: formData.get("platform"),
       icon: formData.get("icon") || null,
-      category: formData.get("category") || null,
+      category: formData.get("category") || null, // Keep for legacy support
+      categoryId: categoryIdValue || null,
       brandColor: formData.get("brandColor") || null,
       websiteUrl: formData.get("websiteUrl") || null,
+      thumbnailUrl: formData.get("thumbnailUrl") || null,
+      sortOrder: sortOrderValue
+        ? parseInt(sortOrderValue as string) || 0
+        : 0,
     });
 
     await prisma.app.update({
       where: { id: validatedId },
-      data: validated,
+      data: {
+        name: validated.name,
+        slug: validated.slug,
+        description: validated.description,
+        platform: validated.platform,
+        icon: validated.icon,
+        legacyCategory: validated.category, // Store in legacy field
+        categoryId: validated.categoryId,
+        brandColor: validated.brandColor,
+        websiteUrl: validated.websiteUrl,
+        thumbnailUrl: validated.thumbnailUrl,
+        sortOrder: validated.sortOrder,
+      },
     });
 
     revalidatePath("/apps");
     revalidatePath(`/apps/${validatedId}/edit`);
+    revalidatePath(`/apps/${validatedId}`);
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error("Validation error:", error.issues);
@@ -283,7 +403,7 @@ export async function updateApp(appId: string, formData: FormData) {
     throw new Error("Failed to update app");
   }
 
-  redirect("/apps");
+  redirect(`/apps/${appId}`);
 }
 
 // Delete app with validation
@@ -336,12 +456,14 @@ const createScreenSchema = z.object({
     .url("Image URL must be valid")
     .max(500, "Image URL too long"),
 
+  // screenType is deprecated - use flowId instead. Keeping for legacy data compatibility.
   screenType: z
     .string()
     .max(50, "Screen type must be less than 50 characters")
     .trim()
     .optional()
-    .nullable(),
+    .nullable()
+    .transform(() => null), // Always set to null to ignore any provided values
 
   tags: z.array(z.string()).optional().default([]),
 });
@@ -353,8 +475,9 @@ export async function createScreens(
     title: string;
     description?: string;
     imageUrl: string;
-    screenType?: string;
     tags?: string[];
+    flowId?: string;
+    // screenType is deprecated - use flowId instead
   }>
 ) {
   try {
@@ -363,9 +486,13 @@ export async function createScreens(
     const validatedAppId = idSchema.parse(appId);
 
     // Validate each screen
-    const validatedScreens = screens.map((screen) =>
-      createScreenSchema.parse(screen)
-    );
+    const validatedScreens = screens.map((screen) => {
+      const baseScreen = createScreenSchema.parse(screen);
+      return {
+        ...baseScreen,
+        flowId: screen.flowId || null,
+      };
+    });
 
     // Create all screens in a transaction
     await prisma.$transaction(
@@ -403,6 +530,14 @@ export async function getScreensByAppId(appId: string) {
 
     const screens = await prisma.screen.findMany({
       where: { appId: validatedId, isPublished: true },
+      include: {
+        flow: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: { createdAt: "asc" },
     });
 
@@ -414,6 +549,167 @@ export async function getScreensByAppId(appId: string) {
     }
     console.error("Failed to fetch screens:", error);
     return { success: false, error: "Failed to fetch screens" };
+  }
+}
+
+// Create a global flow
+export async function createFlow(formData: FormData) {
+  try {
+    // Validate and sanitize input
+    const sortOrderValue = formData.get("sortOrder");
+    const validated = createFlowSchema.parse({
+      name: formData.get("name"),
+      description: formData.get("description") || null,
+      sortOrder: sortOrderValue
+        ? parseInt(sortOrderValue as string) || 0
+        : 0,
+    });
+
+    // Create flow
+    const flow = await prisma.flow.create({
+      data: validated,
+    });
+
+    revalidatePath("/flows");
+
+    return { success: true, data: flow };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      throw new Error(
+        error.issues.map((e: z.ZodIssue) => e.message).join(", ")
+      );
+    }
+    console.error("Failed to create flow:", error);
+    throw new Error("Failed to create flow");
+  }
+}
+
+// Get flows for an app (deprecated: flows are now global, returns all flows)
+export async function getFlowsByAppId(appId: string) {
+  try {
+    // Flows are now global, so return all flows regardless of appId
+    // This function is kept for backward compatibility
+    const flows = await prisma.flow.findMany({
+      orderBy: [
+        { sortOrder: "asc" },
+        { updatedAt: "desc" },
+      ],
+    });
+
+    return { success: true, data: flows };
+  } catch (error) {
+    console.error("Failed to fetch flows:", error);
+    return { success: false, error: "Failed to fetch flows" };
+  }
+}
+
+// Get all flows
+export async function getAllFlows() {
+  try {
+    const flows = await prisma.flow.findMany({
+      include: {
+        screens: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: [
+        { sortOrder: "asc" },
+        { updatedAt: "desc" },
+      ],
+    });
+
+    return { success: true, data: flows };
+  } catch (error) {
+    console.error("Failed to fetch flows:", error);
+    return { success: false, error: "Failed to fetch flows" };
+  }
+}
+
+// Update flow sortOrder
+export async function updateFlowSortOrder(flowId: string, sortOrder: number) {
+  try {
+    const idSchema = z.string().cuid("Invalid flow ID format");
+    const validatedId = idSchema.parse(flowId);
+
+    const sortOrderSchema = z.number().int();
+    const validatedSortOrder = sortOrderSchema.parse(sortOrder);
+
+    await prisma.flow.update({
+      where: { id: validatedId },
+      data: { sortOrder: validatedSortOrder },
+    });
+
+    revalidatePath("/flows");
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      return { success: false, error: "Invalid input" };
+    }
+    console.error("Failed to update flow sortOrder:", error);
+    return { success: false, error: "Failed to update flow sortOrder" };
+  }
+}
+
+// Update multiple flows' sortOrder (batch update)
+export async function updateFlowsSortOrder(
+  updates: Array<{ flowId: string; sortOrder: number }>
+) {
+  try {
+    await prisma.$transaction(
+      updates.map(({ flowId, sortOrder }) =>
+        prisma.flow.update({
+          where: { id: flowId },
+          data: { sortOrder },
+        })
+      )
+    );
+
+    revalidatePath("/flows");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update flows sortOrder:", error);
+    return { success: false, error: "Failed to update flows sortOrder" };
+  }
+}
+
+// Update flow (name, description)
+export async function updateFlow(flowId: string, formData: FormData) {
+  try {
+    const idSchema = z.string().cuid("Invalid flow ID format");
+    const validatedId = idSchema.parse(flowId);
+
+    const sortOrderValue = formData.get("sortOrder");
+    const validated = createFlowSchema.parse({
+      name: formData.get("name"),
+      description: formData.get("description") || null,
+      sortOrder: sortOrderValue
+        ? parseInt(sortOrderValue as string) || 0
+        : 0,
+    });
+
+    await prisma.flow.update({
+      where: { id: validatedId },
+      data: validated,
+    });
+
+    revalidatePath("/flows");
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      throw new Error(
+        error.issues.map((e: z.ZodIssue) => e.message).join(", ")
+      );
+    }
+    console.error("Failed to update flow:", error);
+    throw new Error("Failed to update flow");
   }
 }
 
@@ -436,5 +732,135 @@ export async function deleteScreen(screenId: string) {
     }
     console.error("Failed to delete screen:", error);
     return { success: false, error: "Failed to delete screen" };
+  }
+}
+
+// Category validation schema
+const createCategorySchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters")
+    .trim()
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      "Name can only contain letters, numbers, spaces, hyphens and underscores"
+    ),
+
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(50, "Slug must be less than 50 characters")
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug can only contain lowercase letters, numbers and hyphens"
+    ),
+});
+
+// Get all categories
+export async function getAllCategories() {
+  try {
+    const categories = await prisma.category.findMany({
+      include: {
+        apps: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: [
+        { name: "asc" },
+      ],
+    });
+
+    return { success: true, data: categories };
+  } catch (error) {
+    console.error("Failed to fetch categories:", error);
+    return { success: false, error: "Failed to fetch categories" };
+  }
+}
+
+// Create a category
+export async function createCategory(formData: FormData) {
+  try {
+    const validated = createCategorySchema.parse({
+      name: formData.get("name"),
+      slug: formData.get("slug"),
+    });
+
+    const category = await prisma.category.create({
+      data: validated,
+    });
+
+    revalidatePath("/categories");
+
+    return { success: true, data: category };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      throw new Error(
+        error.issues.map((e: z.ZodIssue) => e.message).join(", ")
+      );
+    }
+    console.error("Failed to create category:", error);
+    throw new Error("Failed to create category");
+  }
+}
+
+// Update a category
+export async function updateCategory(categoryId: string, formData: FormData) {
+  try {
+    const idSchema = z.string().cuid("Invalid category ID format");
+    const validatedId = idSchema.parse(categoryId);
+
+    const validated = createCategorySchema.parse({
+      name: formData.get("name"),
+      slug: formData.get("slug"),
+    });
+
+    await prisma.category.update({
+      where: { id: validatedId },
+      data: validated,
+    });
+
+    revalidatePath("/categories");
+    revalidatePath("/apps");
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues);
+      throw new Error(
+        error.issues.map((e: z.ZodIssue) => e.message).join(", ")
+      );
+    }
+    console.error("Failed to update category:", error);
+    throw new Error("Failed to update category");
+  }
+}
+
+// Delete a category
+export async function deleteCategory(categoryId: string) {
+  try {
+    const idSchema = z.string().cuid("Invalid category ID format");
+    const validatedId = idSchema.parse(categoryId);
+
+    await prisma.category.delete({
+      where: { id: validatedId },
+    });
+
+    revalidatePath("/categories");
+    revalidatePath("/apps");
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Invalid ID:", error.issues);
+      return { success: false, error: "Invalid category ID" };
+    }
+    console.error("Failed to delete category:", error);
+    return { success: false, error: "Failed to delete category" };
   }
 }

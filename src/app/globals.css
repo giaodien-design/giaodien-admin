@@ -119,4 +119,24 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Interactive elements should show pointer cursor */
+  button,
+  a,
+  [role="button"],
+  [role="link"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  select,
+  label[for],
+  .cursor-pointer {
+    @apply cursor-pointer;
+  }
+  /* Disabled elements should show not-allowed cursor */
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  [aria-disabled="true"] {
+    @apply cursor-not-allowed;
+  }
 }

@@ -15,9 +15,10 @@ export async function GET() {
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        { sortOrder: "asc" },
+        { updatedAt: "desc" },
+      ],
     })
 
     return NextResponse.json<ApiResponse<AppWithPreview[]>>({

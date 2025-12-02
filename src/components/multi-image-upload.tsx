@@ -4,6 +4,13 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { IconX, IconPhoto, IconPlus } from "@tabler/icons-react";
 
 export interface ScreenUpload {
@@ -12,6 +19,7 @@ export interface ScreenUpload {
   imageUrl: string;
   title: string;
   description?: string;
+  flowId?: string;
   preview: string;
   uploading: boolean;
   error?: string;
@@ -20,11 +28,13 @@ export interface ScreenUpload {
 interface MultiImageUploadProps {
   onScreensChange: (screens: ScreenUpload[]) => void;
   maxFiles?: number;
+  flows?: Array<{ id: string; name: string }>;
 }
 
 export function MultiImageUpload({
   onScreensChange,
   maxFiles = 20,
+  flows = [],
 }: MultiImageUploadProps) {
   const [screens, setScreens] = useState<ScreenUpload[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -216,6 +226,35 @@ export function MultiImageUpload({
                 placeholder="Brief description..."
               />
             </div>
+
+            {/* Flow selection */}
+            {flows.length > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor={`flow-${screen.id}`} className="text-xs">
+                  Flow (optional)
+                </Label>
+                <Select
+                  value={screen.flowId || ""}
+                  onValueChange={(value) =>
+                    handleUpdateScreen(screen.id, {
+                      flowId: value || undefined,
+                    })
+                  }
+                >
+                  <SelectTrigger id={`flow-${screen.id}`}>
+                    <SelectValue placeholder="Select a flow" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Flow</SelectItem>
+                    {flows.map((flow) => (
+                      <SelectItem key={flow.id} value={flow.id}>
+                        {flow.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Upload status */}
             {screen.uploading && (
