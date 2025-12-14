@@ -1,17 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { IconX, IconPhoto, IconPlus } from "@tabler/icons-react";
+import { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { IconX, IconPhoto, IconPlus } from '@tabler/icons-react';
 
 export interface ScreenUpload {
   id: string;
@@ -31,11 +25,7 @@ interface MultiImageUploadProps {
   flows?: Array<{ id: string; name: string }>;
 }
 
-export function MultiImageUpload({
-  onScreensChange,
-  maxFiles = 20,
-  flows = [],
-}: MultiImageUploadProps) {
+export function MultiImageUpload({ onScreensChange, maxFiles = 20, flows = [] }: MultiImageUploadProps) {
   const [screens, setScreens] = useState<ScreenUpload[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,7 +43,7 @@ export function MultiImageUpload({
 
     for (const file of files) {
       // Validate file
-      if (!file.type.startsWith("image/")) {
+      if (!file.type.startsWith('image/')) {
         continue;
       }
 
@@ -73,10 +63,10 @@ export function MultiImageUpload({
       newScreens.push({
         id: screenId,
         file,
-        imageUrl: "",
-        title: file.name.replace(/\.[^/.]+$/, ""),
+        imageUrl: '',
+        title: file.name.replace(/\.[^/.]+$/, ''),
         preview,
-        uploading: false,
+        uploading: false
       });
     }
 
@@ -86,7 +76,7 @@ export function MultiImageUpload({
 
     // Reset input
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
@@ -97,9 +87,7 @@ export function MultiImageUpload({
   };
 
   const handleUpdateScreen = (id: string, updates: Partial<ScreenUpload>) => {
-    const updatedScreens = screens.map((s) =>
-      s.id === id ? { ...s, ...updates } : s
-    );
+    const updatedScreens = screens.map((s) => (s.id === id ? { ...s, ...updates } : s));
     setScreens(updatedScreens);
     onScreensChange(updatedScreens);
   };
@@ -111,27 +99,27 @@ export function MultiImageUpload({
 
     try {
       const formData = new FormData();
-      formData.append("file", screen.file);
+      formData.append('file', screen.file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
+        throw new Error(data.error || 'Upload failed');
       }
 
       handleUpdateScreen(screen.id, {
         imageUrl: data.url,
-        uploading: false,
+        uploading: false
       });
     } catch (err) {
       handleUpdateScreen(screen.id, {
         uploading: false,
-        error: err instanceof Error ? err.message : "Upload failed",
+        error: err instanceof Error ? err.message : 'Upload failed'
       });
     }
   };
@@ -172,10 +160,7 @@ export function MultiImageUpload({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {screens.map((screen) => (
-          <div
-            key={screen.id}
-            className="border rounded-lg p-4 space-y-3 relative"
-          >
+          <div key={screen.id} className="border rounded-lg p-4 space-y-3 relative">
             {/* Remove button */}
             <Button
               type="button"
@@ -189,11 +174,7 @@ export function MultiImageUpload({
 
             {/* Image preview */}
             <div className="w-full aspect-[9/16] rounded-lg overflow-hidden bg-muted">
-              <img
-                src={screen.preview}
-                alt={screen.title}
-                className="w-full h-full object-cover"
-              />
+              <img src={screen.preview} alt={screen.title} className="w-full h-full object-cover" />
             </div>
 
             {/* Title input */}
@@ -204,9 +185,7 @@ export function MultiImageUpload({
               <Input
                 id={`title-${screen.id}`}
                 value={screen.title}
-                onChange={(e) =>
-                  handleUpdateScreen(screen.id, { title: e.target.value })
-                }
+                onChange={(e) => handleUpdateScreen(screen.id, { title: e.target.value })}
                 placeholder="e.g., Login Screen"
                 required
               />
@@ -219,10 +198,8 @@ export function MultiImageUpload({
               </Label>
               <Input
                 id={`desc-${screen.id}`}
-                value={screen.description || ""}
-                onChange={(e) =>
-                  handleUpdateScreen(screen.id, { description: e.target.value })
-                }
+                value={screen.description || ''}
+                onChange={(e) => handleUpdateScreen(screen.id, { description: e.target.value })}
                 placeholder="Brief description..."
               />
             </div>
@@ -234,10 +211,10 @@ export function MultiImageUpload({
                   Flow (optional)
                 </Label>
                 <Select
-                  value={screen.flowId || ""}
+                  value={screen.flowId || ''}
                   onValueChange={(value) =>
                     handleUpdateScreen(screen.id, {
-                      flowId: value || undefined,
+                      flowId: value || undefined
                     })
                   }
                 >
@@ -257,15 +234,9 @@ export function MultiImageUpload({
             )}
 
             {/* Upload status */}
-            {screen.uploading && (
-              <p className="text-xs text-muted-foreground">Uploading...</p>
-            )}
-            {screen.imageUrl && (
-              <p className="text-xs text-green-600">✓ Uploaded</p>
-            )}
-            {screen.error && (
-              <p className="text-xs text-destructive">{screen.error}</p>
-            )}
+            {screen.uploading && <p className="text-xs text-muted-foreground">Uploading...</p>}
+            {screen.imageUrl && <p className="text-xs text-green-600">✓ Uploaded</p>}
+            {screen.error && <p className="text-xs text-destructive">{screen.error}</p>}
 
             {/* Upload button */}
             {!screen.imageUrl && !screen.uploading && (
@@ -290,9 +261,7 @@ export function MultiImageUpload({
           >
             <IconPhoto className="h-12 w-12 text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground mb-1">Add Screens</p>
-            <p className="text-xs text-muted-foreground">
-              PNG, JPG, WebP up to 5MB
-            </p>
+            <p className="text-xs text-muted-foreground">PNG, JPG, WebP up to 5MB</p>
             <IconPlus className="h-5 w-5 text-muted-foreground mt-2" />
           </label>
         )}

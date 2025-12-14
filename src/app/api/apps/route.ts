@@ -1,38 +1,35 @@
-import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
-import type { ApiResponse, AppWithPreview } from "@/types"
+import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+import type { ApiResponse, AppWithPreview } from '@/types';
 
 export async function GET() {
   try {
     const apps = await prisma.app.findMany({
       include: {
         screens: {
-          take: 3,
+          take: 3
         },
         _count: {
           select: {
-            screens: true,
-          },
-        },
+            screens: true
+          }
+        }
       },
-      orderBy: [
-        { sortOrder: "asc" },
-        { updatedAt: "desc" },
-      ],
-    })
+      orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }]
+    });
 
     return NextResponse.json<ApiResponse<AppWithPreview[]>>({
       success: true,
-      data: apps,
-    })
+      data: apps
+    });
   } catch (error) {
-    console.error("Error fetching apps:", error)
+    console.error('Error fetching apps:', error);
     return NextResponse.json<ApiResponse<never>>(
       {
         success: false,
-        error: "Failed to fetch apps",
+        error: 'Failed to fetch apps'
       },
       { status: 500 }
-    )
+    );
   }
 }

@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { SearchSheet } from "@/components/search-sheet";
-import { Search as SearchIcon } from "lucide-react";
-import { PrimaryTabs } from "@/components/primary-tabs";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SearchSheet } from '@/components/search-sheet';
+import { Search as SearchIcon } from 'lucide-react';
+import { PrimaryTabs } from '@/components/primary-tabs';
 
 export function SiteHeader() {
   const [searchOpen, setSearchOpen] = React.useState(false);

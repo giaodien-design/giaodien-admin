@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { getAllCategories, createCategory, updateCategory, deleteCategory } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect } from 'react';
+import { getAllCategories, createCategory, updateCategory, deleteCategory } from '@/lib/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -12,19 +12,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
-import { Skeleton } from "@/components/ui/skeleton";
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CategoriesManagementPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -32,8 +25,8 @@ export default function CategoriesManagementPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any | null>(null);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategorySlug, setNewCategorySlug] = useState("");
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategorySlug, setNewCategorySlug] = useState('');
 
   useEffect(() => {
     loadData();
@@ -48,7 +41,7 @@ export default function CategoriesManagementPage() {
         setCategories(categoriesResult.data);
       }
     } catch (error) {
-      console.error("Failed to load data:", error);
+      console.error('Failed to load data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -61,19 +54,19 @@ export default function CategoriesManagementPage() {
     setIsCreating(true);
     try {
       const formData = new FormData();
-      formData.set("name", newCategoryName.trim());
-      formData.set("slug", newCategorySlug.trim());
+      formData.set('name', newCategoryName.trim());
+      formData.set('slug', newCategorySlug.trim());
 
       const result = await createCategory(formData);
       if (result.success) {
         setIsDialogOpen(false);
-        setNewCategoryName("");
-        setNewCategorySlug("");
+        setNewCategoryName('');
+        setNewCategorySlug('');
         await loadData();
       }
     } catch (error) {
-      console.error("Failed to create category:", error);
-      alert(error instanceof Error ? error.message : "Failed to create category");
+      console.error('Failed to create category:', error);
+      alert(error instanceof Error ? error.message : 'Failed to create category');
     } finally {
       setIsCreating(false);
     }
@@ -86,27 +79,31 @@ export default function CategoriesManagementPage() {
     setIsCreating(true);
     try {
       const formData = new FormData();
-      formData.set("name", newCategoryName.trim());
-      formData.set("slug", newCategorySlug.trim());
+      formData.set('name', newCategoryName.trim());
+      formData.set('slug', newCategorySlug.trim());
 
       const result = await updateCategory(editingCategory.id, formData);
       if (result.success) {
         setIsDialogOpen(false);
         setEditingCategory(null);
-        setNewCategoryName("");
-        setNewCategorySlug("");
+        setNewCategoryName('');
+        setNewCategorySlug('');
         await loadData();
       }
     } catch (error) {
-      console.error("Failed to update category:", error);
-      alert(error instanceof Error ? error.message : "Failed to update category");
+      console.error('Failed to update category:', error);
+      alert(error instanceof Error ? error.message : 'Failed to update category');
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm("Are you sure you want to delete this category? Apps using this category will have their category unset.")) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this category? Apps using this category will have their category unset.'
+      )
+    ) {
       return;
     }
 
@@ -115,11 +112,11 @@ export default function CategoriesManagementPage() {
       if (result.success) {
         await loadData();
       } else {
-        alert(result.error || "Failed to delete category");
+        alert(result.error || 'Failed to delete category');
       }
     } catch (error) {
-      console.error("Failed to delete category:", error);
-      alert("Failed to delete category");
+      console.error('Failed to delete category:', error);
+      alert('Failed to delete category');
     }
   };
 
@@ -132,8 +129,8 @@ export default function CategoriesManagementPage() {
 
   const openCreateDialog = () => {
     setEditingCategory(null);
-    setNewCategoryName("");
-    setNewCategorySlug("");
+    setNewCategoryName('');
+    setNewCategorySlug('');
     setIsDialogOpen(true);
   };
 
@@ -160,10 +157,18 @@ export default function CategoriesManagementPage() {
             <TableBody>
               {[1, 2, 3].map((i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-16" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-8 w-16" />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -178,9 +183,7 @@ export default function CategoriesManagementPage() {
       <div className="flex items-center justify-between py-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
-          <p className="text-muted-foreground">
-            Manage app categories across all your applications
-          </p>
+          <p className="text-muted-foreground">Manage app categories across all your applications</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -192,13 +195,9 @@ export default function CategoriesManagementPage() {
           <DialogContent>
             <form onSubmit={editingCategory ? handleEditCategory : handleCreateCategory}>
               <DialogHeader>
-                <DialogTitle>
-                  {editingCategory ? "Edit Category" : "Create New Category"}
-                </DialogTitle>
+                <DialogTitle>{editingCategory ? 'Edit Category' : 'Create New Category'}</DialogTitle>
                 <DialogDescription>
-                  {editingCategory
-                    ? "Update the category details"
-                    : "Create a new category for organizing apps"}
+                  {editingCategory ? 'Update the category details' : 'Create a new category for organizing apps'}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -217,31 +216,25 @@ export default function CategoriesManagementPage() {
                   <Input
                     id="categorySlug"
                     value={newCategorySlug}
-                    onChange={(e) => setNewCategorySlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+                    onChange={(e) => setNewCategorySlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
                     placeholder="e.g., social-media, productivity"
                     required
                   />
-                  <p className="text-xs text-muted-foreground">
-                    URL-friendly identifier (lowercase, hyphens)
-                  </p>
+                  <p className="text-xs text-muted-foreground">URL-friendly identifier (lowercase, hyphens)</p>
                 </div>
               </div>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isCreating || !newCategoryName.trim() || !newCategorySlug.trim()}>
                   {isCreating
                     ? editingCategory
-                      ? "Updating..."
-                      : "Creating..."
+                      ? 'Updating...'
+                      : 'Creating...'
                     : editingCategory
-                    ? "Update Category"
-                    : "Create Category"}
+                      ? 'Update Category'
+                      : 'Create Category'}
                 </Button>
               </DialogFooter>
             </form>
@@ -270,19 +263,11 @@ export default function CategoriesManagementPage() {
                   <TableCell>{category.apps?.length || 0}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(category)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(category)}>
                         <IconEdit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteCategory(category.id)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteCategory(category.id)}>
                         <IconTrash className="h-4 w-4 mr-1" />
                         Delete
                       </Button>
@@ -303,4 +288,3 @@ export default function CategoriesManagementPage() {
     </>
   );
 }
-

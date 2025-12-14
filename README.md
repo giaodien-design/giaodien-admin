@@ -113,18 +113,15 @@ docker-compose.yml  # Local PostgreSQL service
 This application uses AWS S3 to store uploaded app icons. To set it up:
 
 1. **Create an S3 Bucket**:
-
    - Go to AWS Console → S3
    - Create a new bucket (e.g., `giaodien-admin-uploads`)
    - Choose your preferred region
 
 2. **Configure Bucket Permissions**:
-
    - Block public access can be enabled (we'll use IAM credentials)
    - Or make it public if you want direct access to images
 
 3. **Create IAM User**:
-
    - Go to AWS Console → IAM → Users
    - Create a new user for programmatic access
    - Attach policy with S3 permissions (e.g., `AmazonS3FullAccess` or custom policy)

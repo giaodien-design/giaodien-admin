@@ -1,16 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface FlowFormProps {
   flow?: {
@@ -25,15 +19,9 @@ interface FlowFormProps {
   isSubmitting: boolean;
 }
 
-export function FlowForm({
-  flow,
-  isOpen,
-  onClose,
-  onSubmit,
-  isSubmitting,
-}: FlowFormProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+export function FlowForm({ flow, isOpen, onClose, onSubmit, isSubmitting }: FlowFormProps) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [sortOrder, setSortOrder] = useState<number>(0);
 
   const isEditMode = !!flow;
@@ -42,12 +30,12 @@ export function FlowForm({
   useEffect(() => {
     if (isOpen) {
       if (flow) {
-        setName(flow.name || "");
-        setDescription(flow.description || "");
+        setName(flow.name || '');
+        setDescription(flow.description || '');
         setSortOrder(flow.sortOrder ?? 0);
       } else {
-        setName("");
-        setDescription("");
+        setName('');
+        setDescription('');
         setSortOrder(0);
       }
     }
@@ -60,7 +48,7 @@ export function FlowForm({
     await onSubmit({
       name: name.trim(),
       description: description.trim(),
-      sortOrder,
+      sortOrder
     });
   };
 
@@ -68,11 +56,11 @@ export function FlowForm({
     <DialogContent>
       <form onSubmit={handleSubmit}>
         <DialogHeader>
-          <DialogTitle>{isEditMode ? "Edit Flow" : "Create New Flow"}</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Flow' : 'Create New Flow'}</DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? "Update the flow details below"
-              : "Create a new global flow category (e.g., Onboarding, Login, Checkout)"}
+              ? 'Update the flow details below'
+              : 'Create a new global flow category (e.g., Onboarding, Login, Checkout)'}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -106,32 +94,18 @@ export function FlowForm({
               placeholder="0"
               min="0"
             />
-            <p className="text-xs text-muted-foreground">
-              Lower numbers appear first in the flows grid
-            </p>
+            <p className="text-xs text-muted-foreground">Lower numbers appear first in the flows grid</p>
           </div>
         </div>
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting || !name.trim()}>
-            {isSubmitting
-              ? isEditMode
-                ? "Saving..."
-                : "Creating..."
-              : isEditMode
-                ? "Save Changes"
-                : "Create Flow"}
+            {isSubmitting ? (isEditMode ? 'Saving...' : 'Creating...') : isEditMode ? 'Save Changes' : 'Create Flow'}
           </Button>
         </DialogFooter>
       </form>
     </DialogContent>
   );
 }
-

@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -122,11 +122,11 @@
   /* Interactive elements should show pointer cursor */
   button,
   a,
-  [role="button"],
-  [role="link"],
-  input[type="submit"],
-  input[type="button"],
-  input[type="reset"],
+  [role='button'],
+  [role='link'],
+  input[type='submit'],
+  input[type='button'],
+  input[type='reset'],
   select,
   label[for],
   .cursor-pointer {
@@ -136,7 +136,7 @@
   button:disabled,
   input:disabled,
   select:disabled,
-  [aria-disabled="true"] {
+  [aria-disabled='true'] {
     @apply cursor-not-allowed;
   }
 }
