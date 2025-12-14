@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { usePathname } from "next/navigation";
-import { type Icon } from "@tabler/icons-react";
-import Link from "next/link";
+import { usePathname } from 'next/navigation';
+import { type Icon } from '@tabler/icons-react';
+import Link from 'next/link';
 
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
+  SidebarMenuItem
+} from '@/components/ui/sidebar';
 
 export function NavMain({
-  items,
+  items
 }: {
   items: {
     title: string;
@@ -28,7 +28,7 @@ export function NavMain({
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive = pathname === item.url || (item.url !== "#" && pathname.startsWith(item.url));
+            const isActive = pathname === item.url || (item.url !== '#' && pathname.startsWith(item.url));
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>

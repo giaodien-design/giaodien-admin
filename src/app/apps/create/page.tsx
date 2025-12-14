@@ -1,46 +1,28 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { createApp, createAppWithScreens, getAllFlows, getAllCategories } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ImageUpload } from "@/components/image-upload";
-import {
-  MultiImageUpload,
-  type ScreenUpload,
-} from "@/components/multi-image-upload";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from 'react';
+import { createApp, createAppWithScreens, getAllFlows, getAllCategories } from '@/lib/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ImageUpload } from '@/components/image-upload';
+import { MultiImageUpload, type ScreenUpload } from '@/components/multi-image-upload';
+import { Separator } from '@/components/ui/separator';
 
 export default function CreateAppPage() {
-  const [iconUrl, setIconUrl] = useState("");
+  const [iconUrl, setIconUrl] = useState('');
   const [screens, setScreens] = useState<ScreenUpload[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [flows, setFlows] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedFlowId, setSelectedFlowId] = useState<string>("");
+  const [selectedFlowId, setSelectedFlowId] = useState<string>('');
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
   useEffect(() => {
     async function loadData() {
-      const [flowsResult, categoriesResult] = await Promise.all([
-        getAllFlows(),
-        getAllCategories(),
-      ]);
+      const [flowsResult, categoriesResult] = await Promise.all([getAllFlows(), getAllCategories()]);
       if (flowsResult.success && flowsResult.data) {
         setFlows(flowsResult.data.map((f) => ({ id: f.id, name: f.name })));
       }
@@ -59,19 +41,17 @@ export default function CreateAppPage() {
       const formData = new FormData(e.currentTarget);
       // Add the icon URL from state
       if (iconUrl) {
-        formData.set("icon", iconUrl);
+        formData.set('icon', iconUrl);
       }
       // Add the category ID from state
       if (selectedCategoryId) {
-        formData.set("categoryId", selectedCategoryId);
+        formData.set('categoryId', selectedCategoryId);
       }
 
       // Validate screens are uploaded
       const unuploadedScreens = screens.filter((s) => !s.imageUrl);
       if (unuploadedScreens.length > 0) {
-        alert(
-          `Please upload all screens to S3 first. ${unuploadedScreens.length} screen(s) pending.`
-        );
+        alert(`Please upload all screens to S3 first. ${unuploadedScreens.length} screen(s) pending.`);
         setIsSubmitting(false);
         return;
       }
@@ -81,7 +61,7 @@ export default function CreateAppPage() {
         title: s.title,
         description: s.description || undefined,
         imageUrl: s.imageUrl,
-        flowId: selectedFlowId || undefined, // Use selected flow for all screens, or undefined if none selected
+        flowId: selectedFlowId || undefined // Use selected flow for all screens, or undefined if none selected
       }));
 
       // Create app with screens
@@ -93,11 +73,11 @@ export default function CreateAppPage() {
       } else {
         // Create app without screens
         await createApp(formData);
-        window.location.href = "/apps";
+        window.location.href = '/apps';
       }
     } catch (error) {
-      console.error("Failed to create app:", error);
-      alert(error instanceof Error ? error.message : "Failed to create app");
+      console.error('Failed to create app:', error);
+      alert(error instanceof Error ? error.message : 'Failed to create app');
       setIsSubmitting(false);
     }
   };
@@ -107,41 +87,24 @@ export default function CreateAppPage() {
       <Card>
         <CardHeader>
           <CardTitle>Create New App</CardTitle>
-          <CardDescription>
-            Add a new application to your dashboard
-          </CardDescription>
+          <CardDescription>Add a new application to your dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label>App Icon</Label>
-              <ImageUpload
-                onUploadComplete={setIconUrl}
-                label="Upload App Icon"
-              />
+              <ImageUpload onUploadComplete={setIconUrl} label="Upload App Icon" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="name">App Name *</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="e.g., Instagram, Facebook"
-                required
-              />
+              <Input id="name" name="name" placeholder="e.g., Instagram, Facebook" required />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="slug">Slug *</Label>
-              <Input
-                id="slug"
-                name="slug"
-                placeholder="e.g., instagram, facebook"
-                required
-              />
-              <p className="text-sm text-muted-foreground">
-                URL-friendly identifier (lowercase, no spaces)
-              </p>
+              <Input id="slug" name="slug" placeholder="e.g., instagram, facebook" required />
+              <p className="text-sm text-muted-foreground">URL-friendly identifier (lowercase, no spaces)</p>
             </div>
 
             <div className="space-y-2">
@@ -170,11 +133,7 @@ export default function CreateAppPage() {
 
             <div className="space-y-2">
               <Label htmlFor="category-select">Category</Label>
-              <Select
-                value={selectedCategoryId}
-                onValueChange={setSelectedCategoryId}
-                disabled={isSubmitting}
-              >
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} disabled={isSubmitting}>
                 <SelectTrigger id="category-select">
                   <SelectValue placeholder="Select a category (optional)" />
                 </SelectTrigger>
@@ -190,51 +149,24 @@ export default function CreateAppPage() {
 
             <div className="space-y-2">
               <Label htmlFor="websiteUrl">Website URL</Label>
-              <Input
-                id="websiteUrl"
-                name="websiteUrl"
-                type="url"
-                placeholder="https://example.com"
-              />
+              <Input id="websiteUrl" name="websiteUrl" type="url" placeholder="https://example.com" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="brandColor">Brand Color</Label>
-              <Input
-                id="brandColor"
-                name="brandColor"
-                type="text"
-                placeholder="#FF5733"
-                pattern="^#[0-9A-Fa-f]{6}$"
-              />
-              <p className="text-sm text-muted-foreground">
-                Hex color code (e.g., #FF5733)
-              </p>
+              <Input id="brandColor" name="brandColor" type="text" placeholder="#FF5733" pattern="^#[0-9A-Fa-f]{6}$" />
+              <p className="text-sm text-muted-foreground">Hex color code (e.g., #FF5733)</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="thumbnailUrl">Thumbnail URL</Label>
-              <Input
-                id="thumbnailUrl"
-                name="thumbnailUrl"
-                type="url"
-                placeholder="https://example.com/thumbnail.png"
-              />
-              <p className="text-sm text-muted-foreground">
-                Cover image for the App Card
-              </p>
+              <Input id="thumbnailUrl" name="thumbnailUrl" type="url" placeholder="https://example.com/thumbnail.png" />
+              <p className="text-sm text-muted-foreground">Cover image for the App Card</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="sortOrder">Sort Order</Label>
-              <Input
-                id="sortOrder"
-                name="sortOrder"
-                type="number"
-                placeholder="0"
-                defaultValue="0"
-                min="0"
-              />
+              <Input id="sortOrder" name="sortOrder" type="number" placeholder="0" defaultValue="0" min="0" />
               <p className="text-sm text-muted-foreground">
                 Controls the app's position on the homepage (lower numbers appear first)
               </p>
@@ -245,23 +177,17 @@ export default function CreateAppPage() {
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold">Screen Images</h3>
-                <p className="text-sm text-muted-foreground">
-                  Upload screenshots and assign them to a flow (optional)
-                </p>
+                <p className="text-sm text-muted-foreground">Upload screenshots and assign them to a flow (optional)</p>
               </div>
 
               {/* Flow Selection */}
               {flows.length > 0 && (
                 <div className="space-y-2">
                   <Label htmlFor="flow-select">Select Flow (Optional)</Label>
-                  <Select
-                    value={selectedFlowId}
-                    onValueChange={setSelectedFlowId}
-                    disabled={isSubmitting}
-                  >
-                  <SelectTrigger id="flow-select">
-                    <SelectValue placeholder="Select a flow to assign all screens to (optional)" />
-                  </SelectTrigger>
+                  <Select value={selectedFlowId} onValueChange={setSelectedFlowId} disabled={isSubmitting}>
+                    <SelectTrigger id="flow-select">
+                      <SelectValue placeholder="Select a flow to assign all screens to (optional)" />
+                    </SelectTrigger>
                     <SelectContent>
                       {flows.map((flow) => (
                         <SelectItem key={flow.id} value={flow.id}>
@@ -284,16 +210,11 @@ export default function CreateAppPage() {
             </div>
 
             <div className="flex gap-3 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                asChild
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="outline" asChild disabled={isSubmitting}>
                 <a href="/apps">Cancel</a>
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Create App"}
+                {isSubmitting ? 'Creating...' : 'Create App'}
               </Button>
             </div>
           </form>

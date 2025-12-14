@@ -1,14 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Search as SearchIcon } from "lucide-react";
+import * as React from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Search as SearchIcon } from 'lucide-react';
 
 interface SearchSheetProps {
   open: boolean;
@@ -16,16 +11,12 @@ interface SearchSheetProps {
   placeholder?: string;
 }
 
-export function SearchSheet({
-  open,
-  onOpenChange,
-  placeholder = "Search apps, data, and more",
-}: SearchSheetProps) {
-  const [searchQuery, setSearchQuery] = React.useState("");
+export function SearchSheet({ open, onOpenChange, placeholder = 'Search apps, data, and more' }: SearchSheetProps) {
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   React.useEffect(() => {
     if (!open) {
-      setSearchQuery("");
+      setSearchQuery('');
     }
   }, [open]);
 
@@ -58,4 +49,3 @@ export function SearchSheet({
     </Sheet>
   );
 }
-

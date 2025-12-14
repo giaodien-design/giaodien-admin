@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 import {
   IconApps,
   IconDashboard,
   IconInnerShadowTop,
   IconSettings,
   IconGitBranch,
-  IconCategory,
-} from "@tabler/icons-react";
+  IconCategory
+} from '@tabler/icons-react';
 
-import { NavApps } from "@/components/nav-apps";
-import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
-import { NavUser } from "@/components/nav-user";
+import { NavApps } from '@/components/nav-apps';
+import { NavMain } from '@/components/nav-main';
+import { NavSecondary } from '@/components/nav-secondary';
+import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -21,45 +21,45 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
+  SidebarMenuItem
+} from '@/components/ui/sidebar';
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: 'shadcn',
+    email: 'm@example.com',
+    avatar: '/avatars/shadcn.jpg'
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
+      title: 'Dashboard',
+      url: '#',
+      icon: IconDashboard
     },
     {
-      title: "All Apps",
-      url: "/apps",
-      icon: IconApps,
+      title: 'All Apps',
+      url: '/apps',
+      icon: IconApps
     },
     {
-      title: "All Flows",
-      url: "/flows",
-      icon: IconGitBranch,
+      title: 'All Flows',
+      url: '/flows',
+      icon: IconGitBranch
     },
     {
-      title: "All Categories",
-      url: "/categories",
-      icon: IconCategory,
-    },
+      title: 'All Categories',
+      url: '/categories',
+      icon: IconCategory
+    }
   ],
   navClouds: [],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-  ],
+      title: 'Settings',
+      url: '#',
+      icon: IconSettings
+    }
+  ]
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -68,10 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">GiaoDien Admin</span>

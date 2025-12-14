@@ -1,28 +1,19 @@
-import { Suspense } from "react";
-import { getAppById, getScreensByAppId } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { IconEdit, IconExternalLink } from "@tabler/icons-react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ScreenCard } from "@/components/screen-card";
+import { Suspense } from 'react';
+import { getAppById, getScreensByAppId } from '@/lib/actions';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { IconEdit, IconExternalLink } from '@tabler/icons-react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ScreenCard } from '@/components/screen-card';
 
 // Revalidate every 60 seconds
 export const revalidate = 60;
 
 async function AppDetailContent({ appId }: { appId: string }) {
-  const [appResult, screensResult] = await Promise.all([
-    getAppById(appId),
-    getScreensByAppId(appId),
-  ]);
+  const [appResult, screensResult] = await Promise.all([getAppById(appId), getScreensByAppId(appId)]);
 
   if (!appResult.success || !appResult.data) {
     notFound();
@@ -40,24 +31,16 @@ async function AppDetailContent({ appId }: { appId: string }) {
             <div className="flex items-start gap-4 flex-1">
               {app.icon && (
                 <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted flex-shrink-0">
-                  <img
-                    src={app.icon}
-                    alt={app.name}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={app.icon} alt={app.name} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-2">
                   <CardTitle className="text-3xl">{app.name}</CardTitle>
                   <Badge variant="secondary">{app.platform}</Badge>
-                  {!app.isPublished && (
-                    <Badge variant="outline">Unpublished</Badge>
-                  )}
+                  {!app.isPublished && <Badge variant="outline">Unpublished</Badge>}
                 </div>
-                <CardDescription className="text-base">
-                  {app.slug}
-                </CardDescription>
+                <CardDescription className="text-base">{app.slug}</CardDescription>
               </div>
             </div>
             <Button asChild>
@@ -93,13 +76,8 @@ async function AppDetailContent({ appId }: { appId: string }) {
               <div>
                 <h3 className="text-sm font-semibold mb-1">Brand Color</h3>
                 <div className="flex items-center gap-2">
-                  <div
-                    className="w-6 h-6 rounded border"
-                    style={{ backgroundColor: app.brandColor }}
-                  />
-                  <span className="text-muted-foreground">
-                    {app.brandColor}
-                  </span>
+                  <div className="w-6 h-6 rounded border" style={{ backgroundColor: app.brandColor }} />
+                  <span className="text-muted-foreground">{app.brandColor}</span>
                 </div>
               </div>
             )}
@@ -120,13 +98,13 @@ async function AppDetailContent({ appId }: { appId: string }) {
             <div>
               <h3 className="text-sm font-semibold mb-1">Screens</h3>
               <p className="text-muted-foreground">
-                {screens?.length || 0} screen{screens?.length !== 1 ? "s" : ""}
+                {screens?.length || 0} screen{screens?.length !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
 
           <div className="text-xs text-muted-foreground pt-2 border-t">
-            Created: {new Date(app.createdAt).toLocaleDateString()} • Updated:{" "}
+            Created: {new Date(app.createdAt).toLocaleDateString()} • Updated:{' '}
             {new Date(app.updatedAt).toLocaleDateString()}
           </div>
         </CardContent>
@@ -146,11 +124,11 @@ async function AppDetailContent({ appId }: { appId: string }) {
             // Group screens by flow
             const screensByFlow = screens.reduce(
               (acc, screen) => {
-                const flowKey = screen.flowId || "no-flow";
+                const flowKey = screen.flowId || 'no-flow';
                 if (!acc[flowKey]) {
                   acc[flowKey] = {
                     flow: screen.flow,
-                    screens: [],
+                    screens: []
                   };
                 }
                 acc[flowKey].screens.push(screen);
@@ -170,11 +148,9 @@ async function AppDetailContent({ appId }: { appId: string }) {
                 {Object.entries(screensByFlow).map(([flowKey, { flow, screens: flowScreens }]) => (
                   <div key={flowKey} className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold">
-                        {flow ? flow.name : "No Flow"}
-                      </h3>
+                      <h3 className="text-lg font-semibold">{flow ? flow.name : 'No Flow'}</h3>
                       <Badge variant="secondary">
-                        {flowScreens.length} screen{flowScreens.length !== 1 ? "s" : ""}
+                        {flowScreens.length} screen{flowScreens.length !== 1 ? 's' : ''}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -190,9 +166,7 @@ async function AppDetailContent({ appId }: { appId: string }) {
         ) : (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">
-                No screens added yet. Add screens to showcase your app.
-              </p>
+              <p className="text-muted-foreground mb-4">No screens added yet. Add screens to showcase your app.</p>
               <Button asChild>
                 <Link href={`/apps/${app.id}/edit`}>Add Screens</Link>
               </Button>

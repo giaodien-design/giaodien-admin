@@ -1,15 +1,15 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // Initialize S3 client
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "us-east-1",
+  region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  },
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ''
+  }
 });
 
-export const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || "";
+export const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || '';
 
 /**
  * Upload a file to S3
@@ -18,25 +18,19 @@ export const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || "";
  * @param contentType - MIME type
  * @returns S3 object URL
  */
-export async function uploadToS3(
-  file: Buffer,
-  key: string,
-  contentType: string
-): Promise<string> {
+export async function uploadToS3(file: Buffer, key: string, contentType: string): Promise<string> {
   // Validate bucket name is configured
-  if (!BUCKET_NAME || BUCKET_NAME.trim() === "") {
-    throw new Error(
-      "AWS_S3_BUCKET_NAME environment variable is not set. Please configure it in your .env file."
-    );
+  if (!BUCKET_NAME || BUCKET_NAME.trim() === '') {
+    throw new Error('AWS_S3_BUCKET_NAME environment variable is not set. Please configure it in your .env file.');
   }
 
   // Validate AWS credentials are configured
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID || "";
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || "";
-  
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID || '';
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || '';
+
   if (!accessKeyId || !secretAccessKey) {
     throw new Error(
-      "AWS credentials are not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file."
+      'AWS credentials are not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your .env file.'
     );
   }
 
@@ -44,15 +38,13 @@ export async function uploadToS3(
     Bucket: BUCKET_NAME,
     Key: key,
     Body: file,
-    ContentType: contentType,
+    ContentType: contentType
   });
 
   await s3Client.send(command);
 
   // Return the public URL (adjust based on your bucket settings)
-  return `https://${BUCKET_NAME}.s3.${
-    process.env.AWS_REGION || "us-east-1"
-  }.amazonaws.com/${key}`;
+  return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
 }
 
 /**
@@ -61,16 +53,13 @@ export async function uploadToS3(
  * @param folder - Optional folder prefix
  * @returns Unique S3 key
  */
-export function generateS3Key(
-  filename: string,
-  folder: string = "apps"
-): string {
+export function generateS3Key(filename: string, folder: string = 'apps'): string {
   const timestamp = Date.now();
   const randomStr = Math.random().toString(36).substring(2, 8);
-  const ext = filename.split(".").pop();
+  const ext = filename.split('.').pop();
   const cleanName = filename
-    .replace(/\.[^/.]+$/, "")
-    .replace(/[^a-z0-9]/gi, "-")
+    .replace(/\.[^/.]+$/, '')
+    .replace(/[^a-z0-9]/gi, '-')
     .toLowerCase();
 
   return `${folder}/${timestamp}-${randomStr}-${cleanName}.${ext}`;
@@ -82,22 +71,13 @@ export function generateS3Key(
  * @param maxSizeMB - Maximum size in MB
  * @returns Validation result
  */
-export function validateImageFile(
-  file: File,
-  maxSizeMB: number = 5
-): { valid: boolean; error?: string } {
-  const allowedTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-  ];
+export function validateImageFile(file: File, maxSizeMB: number = 5): { valid: boolean; error?: string } {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 
   if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
-      error: "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.",
+      error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.'
     };
   }
 
@@ -105,7 +85,7 @@ export function validateImageFile(
   if (file.size > maxSize) {
     return {
       valid: false,
-      error: `File size must be less than ${maxSizeMB}MB.`,
+      error: `File size must be less than ${maxSizeMB}MB.`
     };
   }
 

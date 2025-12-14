@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 type AppItem = {
   id: string | number;
@@ -29,5 +29,3 @@ export function AppGrid({ items }: AppGridProps) {
     </div>
   );
 }
-
-

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 
-const TABS = ["Tất cả", "Di chuyển", "Tài chính", "Giải trí", "Đời sống"] as const;
+const TABS = ['Tất cả', 'Di chuyển', 'Tài chính', 'Giải trí', 'Đời sống'] as const;
 
 type SecondaryTabsProps = {
   value?: string;
@@ -28,7 +28,7 @@ export function SecondaryTabs({ value, onChange }: SecondaryTabsProps) {
             key={t}
             onClick={() => handle(t)}
             className={`h-[35px] text-sm whitespace-nowrap ${
-              current === t ? "font-semibold" : "text-muted-foreground"
+              current === t ? 'font-semibold' : 'text-muted-foreground'
             }`}
           >
             {t}
@@ -38,5 +38,3 @@ export function SecondaryTabs({ value, onChange }: SecondaryTabsProps) {
     </div>
   );
 }
-
-

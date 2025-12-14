@@ -1,27 +1,15 @@
-import { Suspense } from "react";
-import { getAppById, updateApp, getAllFlows, createScreens, getScreensByAppId } from "@/lib/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DeleteAppForm } from "@/components/delete-app-form";
-import { notFound } from "next/navigation";
-import { EditAppFormClient } from "./edit-form-client";
+import { Suspense } from 'react';
+import { getAppById, updateApp, getAllFlows, createScreens, getScreensByAppId } from '@/lib/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DeleteAppForm } from '@/components/delete-app-form';
+import { notFound } from 'next/navigation';
+import { EditAppFormClient } from './edit-form-client';
 
 // Revalidate every 60 seconds
 export const revalidate = 60;
@@ -30,7 +18,7 @@ async function EditAppForm({ id }: { id: string }) {
   const [appResult, flowsResult, screensResult] = await Promise.all([
     getAppById(id),
     getAllFlows(),
-    getScreensByAppId(id),
+    getScreensByAppId(id)
   ]);
 
   if (!appResult.success || !appResult.data) {
@@ -42,11 +30,7 @@ async function EditAppForm({ id }: { id: string }) {
   const screens = screensResult.success ? screensResult.data : [];
 
   return (
-    <EditAppFormClient
-      app={app}
-      flows={flows.map((f) => ({ id: f.id, name: f.name }))}
-      existingScreens={screens}
-    />
+    <EditAppFormClient app={app} flows={flows.map((f) => ({ id: f.id, name: f.name }))} existingScreens={screens} />
   );
 }
 
@@ -78,11 +62,7 @@ function EditAppSkeleton() {
   );
 }
 
-export default async function EditAppPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditAppPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   return (
