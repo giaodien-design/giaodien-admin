@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { IconCheck, IconSelector, IconX } from '@tabler/icons-react';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import { updateScreen, getAllScreenTypes, getAllUIElements } from '@/lib/actions';
 
 interface ScreenType {
@@ -29,31 +33,58 @@ interface UIElement {
   slug: string;
 }
 
+interface Flow {
+  id: string;
+  name: string;
+}
+
+interface AppVersion {
+  id: string;
+  name: string;
+  createdAt: Date;
+  _count: {
+    screens: number;
+  };
+}
+
 interface Screen {
   id: string;
   title: string;
   description: string | null;
   imageUrl: string;
+  sortOrder?: number;
   screenTypeId?: string | null;
   screenType?: ScreenType | null;
+  flowId?: string | null;
+  flow?: Flow | null;
+  appVersionId?: string | null;
+  appVersion?: AppVersion | null;
   uiElements?: UIElement[];
 }
 
 interface ScreenEditDialogProps {
   screen: Screen;
+  flows: Flow[];
+  versions?: AppVersion[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ScreenEditDialog({ screen, open, onOpenChange }: ScreenEditDialogProps) {
+export function ScreenEditDialog({ screen, flows, versions = [], open, onOpenChange }: ScreenEditDialogProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState(screen.title);
   const [description, setDescription] = useState(screen.description || '');
   const [selectedScreenTypeId, setSelectedScreenTypeId] = useState<string>(screen.screenTypeId || '');
+  const [selectedFlowId, setSelectedFlowId] = useState<string>(screen.flowId || '');
+  const [selectedAppVersionId, setSelectedAppVersionId] = useState<string>(screen.appVersionId || '');
+  const [sortOrder, setSortOrder] = useState<number>(screen.sortOrder || 0);
   const [selectedUIElementIds, setSelectedUIElementIds] = useState<string[]>(
     screen.uiElements?.map((el) => el.id) || []
   );
+
+  // Multi-select combobox state
+  const [uiElementsOpen, setUiElementsOpen] = useState(false);
 
   // Data from server
   const [screenTypes, setScreenTypes] = useState<ScreenType[]>([]);
@@ -86,12 +117,25 @@ export function ScreenEditDialog({ screen, open, onOpenChange }: ScreenEditDialo
       setTitle(screen.title);
       setDescription(screen.description || '');
       setSelectedScreenTypeId(screen.screenTypeId || '');
+      setSelectedFlowId(screen.flowId || '');
+      setSelectedAppVersionId(screen.appVersionId || '');
+      setSortOrder(screen.sortOrder || 0);
       setSelectedUIElementIds(screen.uiElements?.map((el) => el.id) || []);
     }
   }, [open, screen]);
 
-  const handleUIElementToggle = (elementId: string, checked: boolean) => {
-    setSelectedUIElementIds((prev) => (checked ? [...prev, elementId] : prev.filter((id) => id !== elementId)));
+  const handleUIElementSelect = (elementId: string) => {
+    setSelectedUIElementIds((prev) =>
+      prev.includes(elementId) ? prev.filter((id) => id !== elementId) : [...prev, elementId]
+    );
+  };
+
+  const handleUIElementRemove = (elementId: string) => {
+    setSelectedUIElementIds((prev) => prev.filter((id) => id !== elementId));
+  };
+
+  const getSelectedUIElements = () => {
+    return uiElements.filter((el) => selectedUIElementIds.includes(el.id));
   };
 
   const handleSubmit = async () => {
@@ -101,6 +145,9 @@ export function ScreenEditDialog({ screen, open, onOpenChange }: ScreenEditDialo
         title,
         description: description || null,
         screenTypeId: selectedScreenTypeId || null,
+        flowId: selectedFlowId || null,
+        appVersionId: selectedAppVersionId || null,
+        sortOrder,
         uiElementIds: selectedUIElementIds
       });
 
@@ -120,10 +167,10 @@ export function ScreenEditDialog({ screen, open, onOpenChange }: ScreenEditDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Screen</DialogTitle>
-          <DialogDescription>Update screen details, type, and UI elements.</DialogDescription>
+          <DialogDescription>Update screen details, type, flow assignment, and UI elements.</DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
@@ -152,15 +199,54 @@ export function ScreenEditDialog({ screen, open, onOpenChange }: ScreenEditDialo
               </div>
             </div>
 
+            {/* Flow Assignment & Sort Order */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2 space-y-2">
+                <Label>Assign to Flow</Label>
+                <Select
+                  value={selectedFlowId || '__none__'}
+                  onValueChange={(val) => setSelectedFlowId(val === '__none__' ? '' : val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a flow (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No Flow</SelectItem>
+                    {flows.map((flow) => (
+                      <SelectItem key={flow.id} value={flow.id}>
+                        {flow.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Group this screen into a user flow</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sortOrder">Order</Label>
+                <Input
+                  id="sortOrder"
+                  type="number"
+                  min={0}
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
+                  placeholder="0"
+                />
+                <p className="text-xs text-muted-foreground">Position in flow</p>
+              </div>
+            </div>
+
             {/* Screen Type Select */}
             <div className="space-y-2">
               <Label>Screen Type</Label>
-              <Select value={selectedScreenTypeId} onValueChange={setSelectedScreenTypeId}>
+              <Select
+                value={selectedScreenTypeId || '__none__'}
+                onValueChange={(val) => setSelectedScreenTypeId(val === '__none__' ? '' : val)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a screen type (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {screenTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
@@ -168,39 +254,100 @@ export function ScreenEditDialog({ screen, open, onOpenChange }: ScreenEditDialo
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                Categorize this screen (e.g., Login, Home, Profile)
-              </p>
+              <p className="text-xs text-muted-foreground">Categorize this screen (e.g., Login, Home, Profile)</p>
             </div>
 
-            {/* UI Elements Multi-Select */}
+            {/* App Version Select */}
+            <div className="space-y-2">
+              <Label>App Version</Label>
+              <Select
+                value={selectedAppVersionId || '__none__'}
+                onValueChange={(val) => setSelectedAppVersionId(val === '__none__' ? '' : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an app version (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">None</SelectItem>
+                  {versions.map((version) => (
+                    <SelectItem key={version.id} value={version.id}>
+                      {version.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Assign this screen to a specific app version</p>
+            </div>
+
+            {/* UI Elements Multi-Select Combobox */}
             <div className="space-y-2">
               <Label>UI Elements</Label>
-              <div className="border rounded-lg p-3 max-h-48 overflow-y-auto space-y-2">
-                {uiElements.map((element) => (
-                  <div key={element.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`ui-element-${element.id}`}
-                      checked={selectedUIElementIds.includes(element.id)}
-                      onCheckedChange={(checked) => handleUIElementToggle(element.id, checked as boolean)}
-                    />
-                    <label
-                      htmlFor={`ui-element-${element.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      {element.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Select UI elements present in this screen
-              </p>
+
+              {/* Selected Elements as Badges */}
               {selectedUIElementIds.length > 0 && (
-                <p className="text-xs text-primary">
-                  {selectedUIElementIds.length} element{selectedUIElementIds.length !== 1 ? 's' : ''} selected
-                </p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {getSelectedUIElements().map((element) => (
+                    <Badge key={element.id} variant="secondary" className="pr-1 gap-1">
+                      {element.name}
+                      <button
+                        type="button"
+                        className="ml-1 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                        onClick={() => handleUIElementRemove(element.id)}
+                      >
+                        <IconX className="size-3" />
+                        <span className="sr-only">Remove {element.name}</span>
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               )}
+
+              {/* Combobox Trigger */}
+              <Popover open={uiElementsOpen} onOpenChange={setUiElementsOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={uiElementsOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {selectedUIElementIds.length > 0
+                      ? `${selectedUIElementIds.length} element${selectedUIElementIds.length !== 1 ? 's' : ''} selected`
+                      : 'Search and select UI elements...'}
+                    <IconSelector className="ml-2 size-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search UI elements..." />
+                    <CommandList>
+                      <CommandEmpty>No UI element found.</CommandEmpty>
+                      <CommandGroup>
+                        {uiElements.map((element) => (
+                          <CommandItem
+                            key={element.id}
+                            value={element.name}
+                            onSelect={() => handleUIElementSelect(element.id)}
+                          >
+                            <div
+                              className={cn(
+                                'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+                                selectedUIElementIds.includes(element.id)
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'opacity-50 [&_svg]:invisible'
+                              )}
+                            >
+                              <IconCheck className="size-3" />
+                            </div>
+                            {element.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <p className="text-xs text-muted-foreground">Select UI elements present in this screen</p>
             </div>
           </div>
         )}
@@ -217,4 +364,3 @@ export function ScreenEditDialog({ screen, open, onOpenChange }: ScreenEditDialo
     </Dialog>
   );
 }
-
