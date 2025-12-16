@@ -1,7 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ScreenEditDialog } from '@/components/screen-edit-dialog';
+import { Pencil } from 'lucide-react';
+
+interface ScreenType {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface UIElement {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 interface ScreenCardProps {
   screen: {
@@ -11,28 +27,70 @@ interface ScreenCardProps {
     imageUrl: string;
     viewCount: number;
     likeCount: number;
+    screenTypeId?: string | null;
+    screenType?: ScreenType | null;
+    uiElements?: UIElement[];
   };
+  showEditButton?: boolean;
 }
 
-export function ScreenCard({ screen }: ScreenCardProps) {
+export function ScreenCard({ screen, showEditButton = true }: ScreenCardProps) {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
   return (
-    <Card className="overflow-hidden">
-      <div className="aspect-[9/16] bg-muted relative group">
-        <img src={screen.imageUrl} alt={screen.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Button variant="secondary" size="sm" onClick={() => window.open(screen.imageUrl, '_blank')}>
-            View Full
-          </Button>
+    <>
+      <Card className="overflow-hidden">
+        <div className="aspect-[9/16] bg-muted relative group">
+          <img src={screen.imageUrl} alt={screen.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => window.open(screen.imageUrl, '_blank')}>
+              View Full
+            </Button>
+            {showEditButton && (
+              <Button variant="secondary" size="sm" onClick={() => setIsEditOpen(true)}>
+                <Pencil className="h-3 w-3 mr-1" />
+                Edit
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-      <CardContent className="p-3">
-        <h3 className="font-semibold text-sm truncate">{screen.title}</h3>
-        {screen.description && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{screen.description}</p>}
-        <div className="flex gap-2 text-xs text-muted-foreground mt-2">
-          <span>👁 {screen.viewCount}</span>
-          <span>❤️ {screen.likeCount}</span>
-        </div>
-      </CardContent>
-    </Card>
+        <CardContent className="p-3">
+          <h3 className="font-semibold text-sm truncate">{screen.title}</h3>
+          {screen.description && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{screen.description}</p>}
+          
+          {/* Screen Type Badge */}
+          {screen.screenType && (
+            <Badge variant="outline" className="mt-2 text-xs">
+              {screen.screenType.name}
+            </Badge>
+          )}
+          
+          {/* UI Elements */}
+          {screen.uiElements && screen.uiElements.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {screen.uiElements.slice(0, 3).map((element) => (
+                <Badge key={element.id} variant="secondary" className="text-xs px-1.5 py-0">
+                  {element.name}
+                </Badge>
+              ))}
+              {screen.uiElements.length > 3 && (
+                <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                  +{screen.uiElements.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+          
+          <div className="flex gap-2 text-xs text-muted-foreground mt-2">
+            <span>👁 {screen.viewCount}</span>
+            <span>❤️ {screen.likeCount}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {showEditButton && (
+        <ScreenEditDialog screen={screen} open={isEditOpen} onOpenChange={setIsEditOpen} />
+      )}
+    </>
   );
 }

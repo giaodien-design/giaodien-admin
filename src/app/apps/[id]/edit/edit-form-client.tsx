@@ -19,6 +19,18 @@ interface Flow {
   name: string;
 }
 
+interface ScreenType {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface UIElement {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface Screen {
   id: string;
   title: string;
@@ -29,6 +41,11 @@ interface Screen {
     id: string;
     name: string;
   } | null;
+  viewCount: number;
+  likeCount: number;
+  screenTypeId?: string | null;
+  screenType?: ScreenType | null;
+  uiElements?: UIElement[];
 }
 
 interface App {
@@ -38,7 +55,6 @@ interface App {
   description: string | null;
   platform: string;
   icon: string | null;
-  category: string | null;
   categoryId: string | null;
   category?: {
     id: string;
@@ -65,6 +81,21 @@ export function EditAppFormClient({ app, flows, existingScreens }: EditAppFormCl
   const [screens, setScreens] = useState<ScreenUpload[]>([]);
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(app.categoryId || '');
+
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const result = await getAllCategories();
+        if (result.success && result.data) {
+          setCategories(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
 
   // Group existing screens by flow
   const screensByFlow = existingScreens.reduce(
@@ -203,6 +234,7 @@ export function EditAppFormClient({ app, flows, existingScreens }: EditAppFormCl
                   <SelectValue placeholder="Select a category (optional)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">No Category</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
