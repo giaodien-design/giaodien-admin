@@ -31,6 +31,7 @@ model App {
   
   // Relations
   screens       Screen[]
+  versions      AppVersion[]
   
   // Metadata
   isPublished   Boolean   @default(true)
@@ -76,12 +77,16 @@ model Screen {
   title       String
   description String?
   imageUrl    String   // URL ảnh screenshot
+  sortOrder   Int      @default(0)  // Order within a flow
+  order       Int      @default(0)  // Sorting position within a flow
   
   // Relations
   appId       String
   app         App      @relation(fields: [appId], references: [id], onDelete: Cascade)
   flowId      String?
   flow        Flow?    @relation(fields: [flowId], references: [id], onDelete: SetNull)
+  appVersionId String?
+  appVersion  AppVersion? @relation(fields: [appVersionId], references: [id], onDelete: SetNull)
   
   // Screen Type relation (optional)
   screenTypeId String?
@@ -105,10 +110,13 @@ model Screen {
 
   @@index([appId])
   @@index([flowId])
+  @@index([appVersionId])
   @@index([screenTypeId])
   @@index([legacyScreenType])
   @@index([viewCount])
   @@index([likeCount])
+  @@index([sortOrder])
+  @@index([order])
 }
 
 model ScreenType {
@@ -135,6 +143,18 @@ model UIElement {
   screens   Screen[]
   
   @@index([slug])
+}
+
+model AppVersion {
+  id        String   @id @default(uuid())
+  name      String   // Version name, e.g., "2.0", "2025 Update"
+  appId     String
+  app       App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  screens   Screen[]
+  createdAt DateTime @default(now())
+  
+  @@index([appId])
+  @@index([createdAt])
 }
 
 enum Platform {
