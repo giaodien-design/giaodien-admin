@@ -52,7 +52,7 @@ interface Screen {
   title: string;
   description: string | null;
   imageUrl: string;
-  sortOrder?: number;
+  order?: number;
   screenTypeId?: string | null;
   screenType?: ScreenType | null;
   flowId?: string | null;
@@ -78,7 +78,7 @@ export function ScreenEditDialog({ screen, flows, versions = [], open, onOpenCha
   const [selectedScreenTypeId, setSelectedScreenTypeId] = useState<string>(screen.screenTypeId || '');
   const [selectedFlowId, setSelectedFlowId] = useState<string>(screen.flowId || '');
   const [selectedAppVersionId, setSelectedAppVersionId] = useState<string>(screen.appVersionId || '');
-  const [sortOrder, setSortOrder] = useState<number>(screen.sortOrder || 0);
+  const [order, setOrder] = useState<number>(screen.order || 0);
   const [selectedUIElementIds, setSelectedUIElementIds] = useState<string[]>(
     screen.uiElements?.map((el) => el.id) || []
   );
@@ -119,7 +119,7 @@ export function ScreenEditDialog({ screen, flows, versions = [], open, onOpenCha
       setSelectedScreenTypeId(screen.screenTypeId || '');
       setSelectedFlowId(screen.flowId || '');
       setSelectedAppVersionId(screen.appVersionId || '');
-      setSortOrder(screen.sortOrder || 0);
+      setOrder(screen.order || 0);
       setSelectedUIElementIds(screen.uiElements?.map((el) => el.id) || []);
     }
   }, [open, screen]);
@@ -147,7 +147,7 @@ export function ScreenEditDialog({ screen, flows, versions = [], open, onOpenCha
         screenTypeId: selectedScreenTypeId || null,
         flowId: selectedFlowId || null,
         appVersionId: selectedAppVersionId || null,
-        sortOrder,
+        order,
         uiElementIds: selectedUIElementIds
       });
 
@@ -222,13 +222,13 @@ export function ScreenEditDialog({ screen, flows, versions = [], open, onOpenCha
                 <p className="text-xs text-muted-foreground">Group this screen into a user flow</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sortOrder">Order</Label>
+                <Label htmlFor="order">Order</Label>
                 <Input
-                  id="sortOrder"
+                  id="order"
                   type="number"
                   min={0}
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
+                  value={order}
+                  onChange={(e) => setOrder(parseInt(e.target.value) || 0)}
                   placeholder="0"
                 />
                 <p className="text-xs text-muted-foreground">Position in flow</p>

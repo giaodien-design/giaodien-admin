@@ -59,7 +59,6 @@ interface Screen {
   title: string;
   description: string | null;
   imageUrl: string;
-  sortOrder?: number;
   order?: number;
   flowId: string | null;
   flow: {

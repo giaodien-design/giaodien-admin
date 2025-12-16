@@ -41,7 +41,7 @@ interface ScreenCardProps {
     imageUrl: string;
     viewCount: number;
     likeCount: number;
-    sortOrder?: number;
+    order?: number;
     screenTypeId?: string | null;
     screenType?: ScreenType | null;
     flowId?: string | null;

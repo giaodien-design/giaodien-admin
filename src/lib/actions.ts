@@ -638,7 +638,7 @@ export async function getScreensByAppId(appId: string) {
           }
         }
       },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
+      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }]
     });
 
     return { success: true, data: screens };
@@ -1238,11 +1238,11 @@ const updateScreenSchema = z.object({
   // App version assignment - null means remove from version, undefined means don't change
   appVersionId: z.string().uuid('Invalid app version ID format').optional().nullable(),
 
-  // Sort order within a flow
-  sortOrder: z.number().int().min(0).optional()
+  // Order/position within a flow
+  order: z.number().int().min(0).optional()
 });
 
-// Update a screen with screenType, uiElements, flowId, appVersionId, and sortOrder
+// Update a screen with screenType, uiElements, flowId, appVersionId, and order
 export async function updateScreen(
   screenId: string,
   data: {
@@ -1252,7 +1252,7 @@ export async function updateScreen(
     uiElementIds?: string[];
     flowId?: string | null;
     appVersionId?: string | null;
-    sortOrder?: number;
+    order?: number;
   }
 ) {
   try {
@@ -1268,7 +1268,7 @@ export async function updateScreen(
       uiElementIds: data.uiElementIds || [],
       flowId: data.flowId,
       appVersionId: data.appVersionId,
-      sortOrder: data.sortOrder
+      order: data.order
     });
 
     // First, get the screen to find its appId for revalidation
@@ -1289,7 +1289,7 @@ export async function updateScreen(
       uiElements: { set: { id: string }[] };
       flowId?: string | null;
       appVersionId?: string | null;
-      sortOrder?: number;
+      order?: number;
     } = {
       title: validated.title,
       description: validated.description,
@@ -1310,9 +1310,9 @@ export async function updateScreen(
       updateData.appVersionId = validated.appVersionId ?? null;
     }
 
-    // Only update sortOrder if it was provided
-    if (validated.sortOrder !== undefined) {
-      updateData.sortOrder = validated.sortOrder;
+    // Only update order if it was provided
+    if (validated.order !== undefined) {
+      updateData.order = validated.order;
     }
 
     // Update the screen

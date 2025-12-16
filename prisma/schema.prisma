@@ -77,8 +77,7 @@ model Screen {
   title       String
   description String?
   imageUrl    String   // URL ảnh screenshot
-  sortOrder   Int      @default(0)  // Order within a flow
-  order       Int      @default(0)  // Sorting position within a flow
+  order       Int      @default(0)  // Order/position within a flow
   
   // Relations
   appId       String
@@ -115,7 +114,6 @@ model Screen {
   @@index([legacyScreenType])
   @@index([viewCount])
   @@index([likeCount])
-  @@index([sortOrder])
   @@index([order])
 }
 
