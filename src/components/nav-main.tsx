@@ -23,12 +23,27 @@ export function NavMain({
 }) {
   const pathname = usePathname();
 
+  // Check if a nav item is active
+  const isItemActive = (itemUrl: string): boolean => {
+    if (itemUrl === '#') return false;
+    
+    // Exact match
+    if (pathname === itemUrl) return true;
+    
+    // For /admin, only match exactly (not /admin/screen-types, etc.)
+    if (itemUrl === '/admin') return pathname === '/admin';
+    
+    // For other routes, check if pathname starts with the URL
+    // This handles nested routes like /apps/123/edit
+    return pathname.startsWith(itemUrl + '/') || pathname === itemUrl;
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive = pathname === item.url || (item.url !== '#' && pathname.startsWith(item.url));
+            const isActive = isItemActive(item.url);
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>

@@ -473,6 +473,20 @@ export async function getScreensByAppId(appId: string) {
             id: true,
             name: true
           }
+        },
+        screenType: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        },
+        uiElements: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
         }
       },
       orderBy: { createdAt: 'asc' }
@@ -771,5 +785,352 @@ export async function deleteCategory(categoryId: string) {
     }
     console.error('Failed to delete category:', error);
     return { success: false, error: 'Failed to delete category' };
+  }
+}
+
+// ============================================
+// ScreenType Actions
+// ============================================
+
+// ScreenType validation schema
+const createScreenTypeSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name must be less than 100 characters')
+    .trim()
+    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Name can only contain letters, numbers, spaces, hyphens and underscores'),
+
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .max(50, 'Slug must be less than 50 characters')
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers and hyphens')
+});
+
+// Get all screen types
+export async function getAllScreenTypes() {
+  try {
+    const screenTypes = await prisma.screenType.findMany({
+      include: {
+        screens: {
+          select: {
+            id: true
+          }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    return { success: true, data: screenTypes };
+  } catch (error) {
+    console.error('Failed to fetch screen types:', error);
+    return { success: false, error: 'Failed to fetch screen types' };
+  }
+}
+
+// Alias for consistency with other actions
+export const getScreenTypes = getAllScreenTypes;
+
+// Create a screen type
+export async function createScreenType(formData: FormData) {
+  try {
+    const name = formData.get('name') as string;
+    // Auto-generate slug from name if not provided
+    const slugValue = formData.get('slug') as string;
+    const slug = slugValue || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const validated = createScreenTypeSchema.parse({
+      name,
+      slug
+    });
+
+    const screenType = await prisma.screenType.create({
+      data: validated
+    });
+
+    revalidatePath('/admin/screen-types');
+    revalidatePath('/apps');
+
+    return { success: true, data: screenType };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues.map((e: z.ZodIssue) => e.message).join(', ') };
+    }
+    console.error('Failed to create screen type:', error);
+    return { success: false, error: 'Failed to create screen type' };
+  }
+}
+
+// Update a screen type
+export async function updateScreenType(screenTypeId: string, formData: FormData) {
+  try {
+    const idSchema = z.string().cuid('Invalid screen type ID format');
+    const validatedId = idSchema.parse(screenTypeId);
+
+    const name = formData.get('name') as string;
+    // Auto-generate slug from name if not provided
+    const slugValue = formData.get('slug') as string;
+    const slug = slugValue || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const validated = createScreenTypeSchema.parse({
+      name,
+      slug
+    });
+
+    await prisma.screenType.update({
+      where: { id: validatedId },
+      data: validated
+    });
+
+    revalidatePath('/admin/screen-types');
+    revalidatePath('/apps');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues.map((e: z.ZodIssue) => e.message).join(', ') };
+    }
+    console.error('Failed to update screen type:', error);
+    return { success: false, error: 'Failed to update screen type' };
+  }
+}
+
+// Delete a screen type
+export async function deleteScreenType(screenTypeId: string) {
+  try {
+    const idSchema = z.string().cuid('Invalid screen type ID format');
+    const validatedId = idSchema.parse(screenTypeId);
+
+    await prisma.screenType.delete({
+      where: { id: validatedId }
+    });
+
+    revalidatePath('/admin/screen-types');
+    revalidatePath('/apps');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Invalid ID:', error.issues);
+      return { success: false, error: 'Invalid screen type ID' };
+    }
+    console.error('Failed to delete screen type:', error);
+    return { success: false, error: 'Failed to delete screen type' };
+  }
+}
+
+// ============================================
+// UIElement Actions
+// ============================================
+
+// UIElement validation schema
+const createUIElementSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name must be less than 100 characters')
+    .trim()
+    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Name can only contain letters, numbers, spaces, hyphens and underscores'),
+
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .max(50, 'Slug must be less than 50 characters')
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers and hyphens')
+});
+
+// Get all UI elements
+export async function getAllUIElements() {
+  try {
+    const uiElements = await prisma.uIElement.findMany({
+      include: {
+        screens: {
+          select: {
+            id: true
+          }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    return { success: true, data: uiElements };
+  } catch (error) {
+    console.error('Failed to fetch UI elements:', error);
+    return { success: false, error: 'Failed to fetch UI elements' };
+  }
+}
+
+// Alias for consistency
+export const getUIElements = getAllUIElements;
+
+// Create a UI element
+export async function createUIElement(formData: FormData) {
+  try {
+    const name = formData.get('name') as string;
+    // Auto-generate slug from name if not provided
+    const slugValue = formData.get('slug') as string;
+    const slug = slugValue || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const validated = createUIElementSchema.parse({
+      name,
+      slug
+    });
+
+    const uiElement = await prisma.uIElement.create({
+      data: validated
+    });
+
+    revalidatePath('/admin/ui-elements');
+    revalidatePath('/apps');
+
+    return { success: true, data: uiElement };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues.map((e: z.ZodIssue) => e.message).join(', ') };
+    }
+    console.error('Failed to create UI element:', error);
+    return { success: false, error: 'Failed to create UI element' };
+  }
+}
+
+// Update a UI element
+export async function updateUIElement(uiElementId: string, formData: FormData) {
+  try {
+    const idSchema = z.string().cuid('Invalid UI element ID format');
+    const validatedId = idSchema.parse(uiElementId);
+
+    const name = formData.get('name') as string;
+    // Auto-generate slug from name if not provided
+    const slugValue = formData.get('slug') as string;
+    const slug = slugValue || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+    const validated = createUIElementSchema.parse({
+      name,
+      slug
+    });
+
+    await prisma.uIElement.update({
+      where: { id: validatedId },
+      data: validated
+    });
+
+    revalidatePath('/admin/ui-elements');
+    revalidatePath('/apps');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues.map((e: z.ZodIssue) => e.message).join(', ') };
+    }
+    console.error('Failed to update UI element:', error);
+    return { success: false, error: 'Failed to update UI element' };
+  }
+}
+
+// Delete a UI element
+export async function deleteUIElement(uiElementId: string) {
+  try {
+    const idSchema = z.string().cuid('Invalid UI element ID format');
+    const validatedId = idSchema.parse(uiElementId);
+
+    await prisma.uIElement.delete({
+      where: { id: validatedId }
+    });
+
+    revalidatePath('/admin/ui-elements');
+    revalidatePath('/apps');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Invalid ID:', error.issues);
+      return { success: false, error: 'Invalid UI element ID' };
+    }
+    console.error('Failed to delete UI element:', error);
+    return { success: false, error: 'Failed to delete UI element' };
+  }
+}
+
+// ============================================
+// Screen Update Action
+// ============================================
+
+// Update screen schema
+const updateScreenSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters').trim(),
+
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .trim()
+    .optional()
+    .nullable()
+    .transform((val) => {
+      if (!val) return null;
+      return val.replace(/<[^>]*>/g, '');
+    }),
+
+  screenTypeId: z.string().cuid('Invalid screen type ID format').optional().nullable(),
+
+  uiElementIds: z.array(z.string().cuid('Invalid UI element ID format')).optional().default([])
+});
+
+// Update a screen with screenType and uiElements
+export async function updateScreen(
+  screenId: string,
+  data: {
+    title?: string;
+    description?: string | null;
+    screenTypeId?: string | null;
+    uiElementIds?: string[];
+  }
+) {
+  try {
+    // Validate screen ID
+    const idSchema = z.string().cuid('Invalid screen ID format');
+    const validatedId = idSchema.parse(screenId);
+
+    // Validate input data
+    const validated = updateScreenSchema.parse({
+      title: data.title,
+      description: data.description,
+      screenTypeId: data.screenTypeId || null,
+      uiElementIds: data.uiElementIds || []
+    });
+
+    // Update the screen with proper many-to-many handling
+    await prisma.screen.update({
+      where: { id: validatedId },
+      data: {
+        title: validated.title,
+        description: validated.description,
+        screenTypeId: validated.screenTypeId,
+        // For many-to-many: disconnect all existing, then connect new ones
+        uiElements: {
+          set: [], // Disconnect all existing
+          connect: validated.uiElementIds.map((id) => ({ id })) // Connect new ones
+        }
+      }
+    });
+
+    revalidatePath('/apps');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues.map((e: z.ZodIssue) => e.message).join(', ') };
+    }
+    console.error('Failed to update screen:', error);
+    return { success: false, error: 'Failed to update screen' };
   }
 }

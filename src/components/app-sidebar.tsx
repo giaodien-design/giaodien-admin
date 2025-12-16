@@ -7,7 +7,9 @@ import {
   IconInnerShadowTop,
   IconSettings,
   IconGitBranch,
-  IconCategory
+  IconCategory,
+  IconStack2,
+  IconComponents
 } from '@tabler/icons-react';
 
 import { NavApps } from '@/components/nav-apps';
@@ -33,7 +35,7 @@ const data = {
   navMain: [
     {
       title: 'Dashboard',
-      url: '#',
+      url: '/admin',
       icon: IconDashboard
     },
     {
@@ -50,6 +52,16 @@ const data = {
       title: 'All Categories',
       url: '/categories',
       icon: IconCategory
+    },
+    {
+      title: 'Screen Types',
+      url: '/admin/screen-types',
+      icon: IconStack2
+    },
+    {
+      title: 'UI Elements',
+      url: '/admin/ui-elements',
+      icon: IconComponents
     }
   ],
   navClouds: [],
