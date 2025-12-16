@@ -35,7 +35,7 @@ const data = {
   navMain: [
     {
       title: 'Dashboard',
-      url: '/admin',
+      url: '/',
       icon: IconDashboard
     },
     {
@@ -55,12 +55,12 @@ const data = {
     },
     {
       title: 'Screen Types',
-      url: '/admin/screen-types',
+      url: '/screen-types',
       icon: IconStack2
     },
     {
       title: 'UI Elements',
-      url: '/admin/ui-elements',
+      url: '/ui-elements',
       icon: IconComponents
     }
   ],
@@ -81,7 +81,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
+              <a href="/">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">GiaoDien Admin</span>
               </a>

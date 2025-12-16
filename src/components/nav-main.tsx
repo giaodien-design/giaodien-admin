@@ -30,8 +30,8 @@ export function NavMain({
     // Exact match
     if (pathname === itemUrl) return true;
     
-    // For /admin, only match exactly (not /admin/screen-types, etc.)
-    if (itemUrl === '/admin') return pathname === '/admin';
+    // For root '/', only match exactly (not /apps, /flows, etc.)
+    if (itemUrl === '/') return pathname === '/';
     
     // For other routes, check if pathname starts with the URL
     // This handles nested routes like /apps/123/edit

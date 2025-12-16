@@ -219,13 +219,13 @@ async function DashboardContent() {
               </Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/admin/screen-types">
+              <Link href="/screen-types">
                 <IconStack2 className="mr-2 h-4 w-4" />
                 Screen Types
               </Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/admin/ui-elements">
+              <Link href="/ui-elements">
                 <IconComponents className="mr-2 h-4 w-4" />
                 UI Elements
               </Link>
@@ -293,7 +293,7 @@ function DashboardSkeleton() {
   );
 }
 
-export default function AdminDashboardPage() {
+export default function DashboardPage() {
   return (
     <>
       {/* Header */}
