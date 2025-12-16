@@ -3,6 +3,70 @@ import { PrismaClient } from '@/generated/prisma';
 const prisma = new PrismaClient();
 
 async function main() {
+  // ============================================
+  // Seed ScreenTypes
+  // ============================================
+  const screenTypes = [
+    'Login',
+    'Register',
+    'Onboarding',
+    'Home',
+    'Profile',
+    'Settings',
+    'Checkout',
+    'Search',
+    'Detail',
+  ];
+
+  console.log('Seeding ScreenTypes...');
+
+  for (const name of screenTypes) {
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    await prisma.screenType.upsert({
+      where: { name },
+      update: { slug },
+      create: { name, slug },
+    });
+    console.log(`✓ Upserted ScreenType: ${name}`);
+  }
+
+  console.log('✅ Finished seeding ScreenTypes!\n');
+
+  // ============================================
+  // Seed UIElements
+  // ============================================
+  const uiElements = [
+    'Button',
+    'Input',
+    'Modal',
+    'Tab Bar',
+    'Bottom Navigation',
+    'Card',
+    'List',
+    'Toggle',
+    'Checkbox',
+    'Radio',
+    'Tooltip',
+    'Notification',
+  ];
+
+  console.log('Seeding UIElements...');
+
+  for (const name of uiElements) {
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    await prisma.uIElement.upsert({
+      where: { name },
+      update: { slug },
+      create: { name, slug },
+    });
+    console.log(`✓ Upserted UIElement: ${name}`);
+  }
+
+  console.log('✅ Finished seeding UIElements!\n');
+
+  // ============================================
+  // Seed User Flows
+  // ============================================
   // Standard User Flows to seed
   const flows = [
     {
@@ -99,7 +163,9 @@ async function main() {
     }
   }
 
-  console.log('\n✅ Finished seeding User Flows!');
+  console.log('✅ Finished seeding User Flows!\n');
+
+  console.log('🎉 Seeding completed');
 }
 
 main()
