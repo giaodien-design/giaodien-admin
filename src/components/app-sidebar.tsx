@@ -7,7 +7,9 @@ import {
   IconInnerShadowTop,
   IconSettings,
   IconGitBranch,
-  IconCategory
+  IconCategory,
+  IconStack2,
+  IconComponents
 } from '@tabler/icons-react';
 
 import { NavApps } from '@/components/nav-apps';
@@ -33,7 +35,7 @@ const data = {
   navMain: [
     {
       title: 'Dashboard',
-      url: '#',
+      url: '/',
       icon: IconDashboard
     },
     {
@@ -50,6 +52,16 @@ const data = {
       title: 'All Categories',
       url: '/categories',
       icon: IconCategory
+    },
+    {
+      title: 'Screen Types',
+      url: '/screen-types',
+      icon: IconStack2
+    },
+    {
+      title: 'UI Elements',
+      url: '/ui-elements',
+      icon: IconComponents
     }
   ],
   navClouds: [],
@@ -69,7 +81,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
+              <a href="/">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">GiaoDien Admin</span>
               </a>

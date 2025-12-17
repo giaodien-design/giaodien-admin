@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { getAppById, getScreensByAppId } from '@/lib/actions';
+import { getAppById, getScreensByAppId, getFlowsByAppId, getAppVersions } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,12 @@ import { ScreenCard } from '@/components/screen-card';
 export const revalidate = 60;
 
 async function AppDetailContent({ appId }: { appId: string }) {
-  const [appResult, screensResult] = await Promise.all([getAppById(appId), getScreensByAppId(appId)]);
+  const [appResult, screensResult, flowsResult, versionsResult] = await Promise.all([
+    getAppById(appId),
+    getScreensByAppId(appId),
+    getFlowsByAppId(appId),
+    getAppVersions(appId)
+  ]);
 
   if (!appResult.success || !appResult.data) {
     notFound();
@@ -21,6 +26,8 @@ async function AppDetailContent({ appId }: { appId: string }) {
 
   const app = appResult.data;
   const screens = screensResult.success ? screensResult.data : [];
+  const flows = flowsResult.success ? flowsResult.data : [];
+  const versions = versionsResult.success ? versionsResult.data : [];
 
   return (
     <div className="space-y-6">
@@ -155,7 +162,7 @@ async function AppDetailContent({ appId }: { appId: string }) {
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       {flowScreens.map((screen) => (
-                        <ScreenCard key={screen.id} screen={screen} />
+                        <ScreenCard key={screen.id} screen={screen} flows={flows} versions={versions} />
                       ))}
                     </div>
                   </div>

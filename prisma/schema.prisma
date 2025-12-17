@@ -31,6 +31,7 @@ model App {
   
   // Relations
   screens       Screen[]
+  versions      AppVersion[]
   
   // Metadata
   isPublished   Boolean   @default(true)
@@ -76,15 +77,25 @@ model Screen {
   title       String
   description String?
   imageUrl    String   // URL ảnh screenshot
+  order       Int      @default(0)  // Order/position within a flow
   
   // Relations
   appId       String
   app         App      @relation(fields: [appId], references: [id], onDelete: Cascade)
   flowId      String?
   flow        Flow?    @relation(fields: [flowId], references: [id], onDelete: SetNull)
+  appVersionId String?
+  appVersion  AppVersion? @relation(fields: [appVersionId], references: [id], onDelete: SetNull)
+  
+  // Screen Type relation (optional)
+  screenTypeId String?
+  screenType   ScreenType? @relation(fields: [screenTypeId], references: [id], onDelete: SetNull)
+  
+  // UI Elements relation (many-to-many)
+  uiElements   UIElement[]
   
   // Categorization
-  screenType  String?  // Login, Home, Profile, Settings, Onboarding, Checkout, etc.
+  legacyScreenType String?  // Legacy field (deprecated, kept for data migration)
   tags        String[] // modal, form, list, card, navigation, animation, etc.
   
   // Engagement
@@ -98,13 +109,143 @@ model Screen {
 
   @@index([appId])
   @@index([flowId])
-  @@index([screenType])
+  @@index([appVersionId])
+  @@index([screenTypeId])
+  @@index([legacyScreenType])
   @@index([viewCount])
   @@index([likeCount])
+  @@index([order])
+}
+
+model ScreenType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  screens   Screen[]
+  
+  @@index([slug])
+}
+
+model UIElement {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  screens   Screen[]
+  
+  @@index([slug])
+}
+
+model AppVersion {
+  id        String   @id @default(uuid())
+  name      String   // Version name, e.g., "2.0", "2025 Update"
+  appId     String
+  app       App      @relation(fields: [appId], references: [id], onDelete: Cascade)
+  screens   Screen[]
+  createdAt DateTime @default(now())
+  
+  @@index([appId])
+  @@index([createdAt])
 }
 
 enum Platform {
   IOS
   ANDROID
   WEB
+}
+
+// NextAuth.js Models
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  transactions  Transaction[]
+  orders        Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([email])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([provider, providerAccountId])
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+  @@id([identifier, token])
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name          String
+  total         Decimal  @db.Decimal(20, 2) // Số tiền (VNĐ)
+  paymentStatus String   @default("Unpaid") // "Unpaid" | "Paid"
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([userId])
+  @@index([paymentStatus])
+}
+
+model Transaction {
+  id                 String    @id @default(cuid())
+  
+  // User reference
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Transaction details từ SePay webhook
+  gateway            String    @db.VarChar(100)
+  transactionDate    DateTime  @default(now())
+  accountNumber      String?   @db.VarChar(100)
+  subAccount         String?   @db.VarChar(250)
+  
+  // Amounts
+  amountIn           Decimal   @default(0.00) @db.Decimal(20, 2)
+  amountOut          Decimal   @default(0.00) @db.Decimal(20, 2)
+  accumulated        Decimal   @default(0.00) @db.Decimal(20, 2)
+  
+  // Additional info
+  code               String?   @db.VarChar(250)
+  transactionContent String?   @db.Text
+  referenceNumber    String?   @db.VarChar(255)
+  body               String?   @db.Text
+  
+  // Metadata
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  @@index([userId])
+  @@index([transactionDate])
+  @@index([gateway])
+  @@index([transactionContent])
 }

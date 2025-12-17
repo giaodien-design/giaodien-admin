@@ -211,10 +211,10 @@ export function MultiImageUpload({ onScreensChange, maxFiles = 20, flows = [] }:
                   Flow (optional)
                 </Label>
                 <Select
-                  value={screen.flowId || ''}
+                  value={screen.flowId || '__none__'}
                   onValueChange={(value) =>
                     handleUpdateScreen(screen.id, {
-                      flowId: value || undefined
+                      flowId: value === '__none__' ? undefined : value
                     })
                   }
                 >
@@ -222,7 +222,7 @@ export function MultiImageUpload({ onScreensChange, maxFiles = 20, flows = [] }:
                     <SelectValue placeholder="Select a flow" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Flow</SelectItem>
+                    <SelectItem value="__none__">No Flow</SelectItem>
                     {flows.map((flow) => (
                       <SelectItem key={flow.id} value={flow.id}>
                         {flow.name}

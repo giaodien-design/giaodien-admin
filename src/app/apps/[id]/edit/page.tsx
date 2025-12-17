@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { getAppById, updateApp, getAllFlows, createScreens, getScreensByAppId } from '@/lib/actions';
+import { getAppById, updateApp, getAllFlows, createScreens, getScreensByAppId, getAppVersions } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,10 +15,11 @@ import { EditAppFormClient } from './edit-form-client';
 export const revalidate = 60;
 
 async function EditAppForm({ id }: { id: string }) {
-  const [appResult, flowsResult, screensResult] = await Promise.all([
+  const [appResult, flowsResult, screensResult, versionsResult] = await Promise.all([
     getAppById(id),
     getAllFlows(),
-    getScreensByAppId(id)
+    getScreensByAppId(id),
+    getAppVersions(id)
   ]);
 
   if (!appResult.success || !appResult.data) {
@@ -28,9 +29,15 @@ async function EditAppForm({ id }: { id: string }) {
   const app = appResult.data;
   const flows = flowsResult.success ? flowsResult.data : [];
   const screens = screensResult.success ? screensResult.data : [];
+  const versions = versionsResult.success ? versionsResult.data : [];
 
   return (
-    <EditAppFormClient app={app} flows={flows.map((f) => ({ id: f.id, name: f.name }))} existingScreens={screens} />
+    <EditAppFormClient
+      app={app}
+      flows={flows.map((f) => ({ id: f.id, name: f.name }))}
+      existingScreens={screens}
+      versions={versions}
+    />
   );
 }
 
