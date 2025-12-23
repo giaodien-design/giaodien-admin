@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Comfortaa } from 'next/font/google';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const comfortaa = Comfortaa({
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${comfortaa.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

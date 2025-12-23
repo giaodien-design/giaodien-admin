@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllScreenTypes, createScreenType, updateScreenType, deleteScreenType } from '@/lib/actions';
+import { getAllScreenTypes, createScreenType, updateScreenType, deleteScreenType, toggleScreenTypeRecommendation } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,13 +16,15 @@ import {
 } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconTrash, IconStarFilled } from '@tabler/icons-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RecommendationToggle } from '@/components/recommendation-toggle';
 
 interface ScreenType {
   id: string;
   name: string;
   slug: string;
+  isRecommended?: boolean;
   screens?: { id: string }[];
 }
 
@@ -166,6 +168,12 @@ export default function ScreenTypesManagementPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <IconStarFilled className="h-4 w-4 text-yellow-500" />
+                    <span>Recommended</span>
+                  </div>
+                </TableHead>
                 <TableHead>Screens Count</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -175,6 +183,7 @@ export default function ScreenTypesManagementPage() {
                 <TableRow key={i}>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="text-center"><Skeleton className="h-5 w-9 mx-auto" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
                 </TableRow>
@@ -252,6 +261,12 @@ export default function ScreenTypesManagementPage() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Slug</TableHead>
+              <TableHead className="text-center">
+                <div className="flex items-center justify-center gap-1">
+                  <IconStarFilled className="h-4 w-4 text-yellow-500" />
+                  <span>Recommended</span>
+                </div>
+              </TableHead>
               <TableHead>Screens Count</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -263,6 +278,14 @@ export default function ScreenTypesManagementPage() {
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{item.slug}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <RecommendationToggle
+                      id={item.id}
+                      isRecommended={item.isRecommended ?? false}
+                      onToggle={toggleScreenTypeRecommendation}
+                      label={`Toggle recommendation for ${item.name}`}
+                    />
                   </TableCell>
                   <TableCell>{item.screens?.length || 0}</TableCell>
                   <TableCell className="text-right">
@@ -281,7 +304,7 @@ export default function ScreenTypesManagementPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No screen types found. Create your first screen type to get started.
                 </TableCell>
               </TableRow>
