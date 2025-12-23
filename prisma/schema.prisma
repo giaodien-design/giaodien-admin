@@ -35,6 +35,7 @@ model App {
   
   // Metadata
   isPublished   Boolean   @default(true)
+  isRecommended Boolean   @default(false) // For search empty state suggestions
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -43,6 +44,7 @@ model App {
   @@index([platform])
   @@index([slug])
   @@index([isPublished, createdAt(sort: Desc)])
+  @@index([isRecommended])
 }
 
 model Category {
@@ -68,8 +70,11 @@ model Flow {
   screens     Screen[]
   
   // Metadata
+  isRecommended Boolean  @default(false) // For search empty state suggestions
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([isRecommended])
 }
 
 model Screen {
@@ -121,6 +126,7 @@ model ScreenType {
   id        String   @id @default(cuid())
   name      String   @unique
   slug      String   @unique
+  isRecommended Boolean @default(false) // For search empty state suggestions
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -128,12 +134,14 @@ model ScreenType {
   screens   Screen[]
   
   @@index([slug])
+  @@index([isRecommended])
 }
 
 model UIElement {
   id        String   @id @default(cuid())
   name      String   @unique
   slug      String   @unique
+  isRecommended Boolean @default(false) // For search empty state suggestions
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -141,6 +149,7 @@ model UIElement {
   screens   Screen[]
   
   @@index([slug])
+  @@index([isRecommended])
 }
 
 model AppVersion {

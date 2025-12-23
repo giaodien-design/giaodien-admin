@@ -1423,3 +1423,117 @@ export async function reorderScreens(items: { id: string; order: number }[]) {
     return { success: false, error: `Failed to reorder screens: ${errorMessage}` };
   }
 }
+
+// ============================================
+// Recommendation Toggle Actions
+// ============================================
+
+// Toggle App recommendation status
+export async function toggleAppRecommendation(id: string, isRecommended: boolean) {
+  try {
+    const idSchema = z.string().cuid('Invalid app ID format');
+    const validatedId = idSchema.parse(id);
+
+    const booleanSchema = z.boolean();
+    const validatedIsRecommended = booleanSchema.parse(isRecommended);
+
+    await prisma.app.update({
+      where: { id: validatedId },
+      data: { isRecommended: validatedIsRecommended }
+    });
+
+    revalidatePath('/apps');
+    revalidatePath(`/apps/${validatedId}`);
+    revalidatePath(`/apps/${validatedId}/edit`);
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+    }
+    console.error('Failed to toggle app recommendation:', error);
+    return { success: false, error: 'Failed to toggle app recommendation' };
+  }
+}
+
+// Toggle ScreenType recommendation status
+export async function toggleScreenTypeRecommendation(id: string, isRecommended: boolean) {
+  try {
+    const idSchema = z.string().cuid('Invalid screen type ID format');
+    const validatedId = idSchema.parse(id);
+
+    const booleanSchema = z.boolean();
+    const validatedIsRecommended = booleanSchema.parse(isRecommended);
+
+    await prisma.screenType.update({
+      where: { id: validatedId },
+      data: { isRecommended: validatedIsRecommended }
+    });
+
+    revalidatePath('/screen-types');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+    }
+    console.error('Failed to toggle screen type recommendation:', error);
+    return { success: false, error: 'Failed to toggle screen type recommendation' };
+  }
+}
+
+// Toggle UIElement recommendation status
+export async function toggleUiElementRecommendation(id: string, isRecommended: boolean) {
+  try {
+    const idSchema = z.string().cuid('Invalid UI element ID format');
+    const validatedId = idSchema.parse(id);
+
+    const booleanSchema = z.boolean();
+    const validatedIsRecommended = booleanSchema.parse(isRecommended);
+
+    await prisma.uIElement.update({
+      where: { id: validatedId },
+      data: { isRecommended: validatedIsRecommended }
+    });
+
+    revalidatePath('/ui-elements');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+    }
+    console.error('Failed to toggle UI element recommendation:', error);
+    return { success: false, error: 'Failed to toggle UI element recommendation' };
+  }
+}
+
+// Toggle Flow recommendation status
+export async function toggleFlowRecommendation(id: string, isRecommended: boolean) {
+  try {
+    const idSchema = z.string().cuid('Invalid flow ID format');
+    const validatedId = idSchema.parse(id);
+
+    const booleanSchema = z.boolean();
+    const validatedIsRecommended = booleanSchema.parse(isRecommended);
+
+    await prisma.flow.update({
+      where: { id: validatedId },
+      data: { isRecommended: validatedIsRecommended }
+    });
+
+    revalidatePath('/flows');
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.issues);
+      return { success: false, error: error.issues[0]?.message || 'Validation failed' };
+    }
+    console.error('Failed to toggle flow recommendation:', error);
+    return { success: false, error: 'Failed to toggle flow recommendation' };
+  }
+}
