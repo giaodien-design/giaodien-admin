@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllFlows, createFlow, updateFlow, updateFlowSortOrder } from '@/lib/actions';
+import { getAllFlows, createFlow, updateFlow, updateFlowSortOrder, toggleFlowRecommendation } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { IconPlus, IconEdit } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconStarFilled } from '@tabler/icons-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FlowForm } from '@/components/flow-form';
+import { RecommendationToggle } from '@/components/recommendation-toggle';
 
 export default function FlowsManagementPage() {
   const [flows, setFlows] = useState<any[]>([]);
@@ -194,9 +195,18 @@ export default function FlowsManagementPage() {
                     <CardTitle className="flex items-center gap-2 flex-wrap">
                       <span className="truncate">{flow.name}</span>
                       <Badge variant="secondary">Sort: {sortOrderValues[flow.id] ?? 0}</Badge>
+                      {flow.isRecommended && (
+                        <IconStarFilled className="h-4 w-4 text-yellow-500" />
+                      )}
                     </CardTitle>
                     <CardDescription className="mt-1.5">Global Flow Category</CardDescription>
                   </div>
+                  <RecommendationToggle
+                    id={flow.id}
+                    isRecommended={flow.isRecommended ?? false}
+                    onToggle={toggleFlowRecommendation}
+                    label={`Toggle recommendation for ${flow.name}`}
+                  />
                 </div>
               </CardHeader>
               <CardContent>

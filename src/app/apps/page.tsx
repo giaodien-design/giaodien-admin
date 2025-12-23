@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DeleteAppButton } from '@/components/delete-app-button';
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconStarFilled } from '@tabler/icons-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AppRecommendationToggle } from '@/components/app-recommendation-toggle';
 
 // Revalidate every 60 seconds
 export const revalidate = 60;
@@ -29,9 +30,17 @@ async function AppsList() {
                   <CardTitle className="flex items-center gap-2 flex-wrap">
                     <span className="truncate">{app.name}</span>
                     <Badge variant="secondary">{app.platform}</Badge>
+                    {app.isRecommended && (
+                      <IconStarFilled className="h-4 w-4 text-yellow-500" />
+                    )}
                   </CardTitle>
                   <CardDescription className="mt-1.5 truncate">{app.slug}</CardDescription>
                 </div>
+                <AppRecommendationToggle
+                  id={app.id}
+                  isRecommended={app.isRecommended ?? false}
+                  appName={app.name}
+                />
               </div>
             </CardHeader>
             <CardContent>
