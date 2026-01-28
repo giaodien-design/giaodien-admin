@@ -9,7 +9,8 @@ import {
   IconGitBranch,
   IconCategory,
   IconStack2,
-  IconComponents
+  IconComponents,
+  IconUsers
 } from '@tabler/icons-react';
 
 import { NavApps } from '@/components/nav-apps';
@@ -62,6 +63,11 @@ const data = {
       title: 'UI Elements',
       url: '/ui-elements',
       icon: IconComponents
+    },
+    {
+      title: 'Users',
+      url: '/users',
+      icon: IconUsers
     }
   ],
   navClouds: [],
