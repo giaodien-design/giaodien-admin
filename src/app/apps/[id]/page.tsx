@@ -211,10 +211,11 @@ function AppDetailSkeleton() {
   );
 }
 
-export default function AppDetailPage({ params }: { params: { id: string } }) {
+export default async function AppDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <Suspense fallback={<AppDetailSkeleton />}>
-      <AppDetailContent appId={params.id} />
+      <AppDetailContent appId={id} />
     </Suspense>
   );
 }
