@@ -27,9 +27,9 @@ async function EditAppForm({ id }: { id: string }) {
   }
 
   const app = appResult.data;
-  const flows = flowsResult.success ? flowsResult.data : [];
-  const screens = screensResult.success ? screensResult.data : [];
-  const versions = versionsResult.success ? versionsResult.data : [];
+  const flows = (flowsResult.success ? flowsResult.data : []) ?? [];
+  const screens = (screensResult.success ? screensResult.data : []) ?? [];
+  const versions = (versionsResult.success ? versionsResult.data : []) ?? [];
 
   return (
     <EditAppFormClient
